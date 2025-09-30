@@ -10,3 +10,4 @@ torch
 pandas
 GPUtil
 setuptools
+pygame
