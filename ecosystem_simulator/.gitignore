@@ -1,0 +1,14 @@
+# Ignorar archivos de log
+*.log
+
+# Ignorar archivos de configuración local
+local_config.yml
+
+# Ignorar archivos temporales generados por Windows
+.DS_Store
+
+# Ignorar archivos generados por IDEs
+.vscode/
+
+# Ignorar entorno virtual de Python
+.venv/

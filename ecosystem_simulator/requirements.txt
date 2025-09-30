@@ -1,0 +1,13 @@
+ray[tune]
+ray[rllib]
+gymnasium
+pettingzoo
+supersuit
+numpy
+scipy
+matplotlib
+torch
+pandas
+GPUtil
+setuptools
+pygame
