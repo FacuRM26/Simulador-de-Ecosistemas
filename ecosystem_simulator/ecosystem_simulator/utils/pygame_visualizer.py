@@ -13,16 +13,16 @@ class EcosystemVisualizer:
         
         # Inicializar Pygame
         pygame.init()
-        self.screen = pygame.display.set_mode((map_width, map_height + 200))  # Espacio extra para stats
+        self.screen = pygame.display.set_mode((map_width, map_height + 170))  # Espacio extra para stats
         pygame.display.set_caption("Simulador de Ecosistemas Multi-Agente - Entrenamiento en Tiempo Real")
         
         # Colores
         self.colors = {
-            'background': (240, 240, 240),
-            'vegetation': (34, 139, 34),    # Verde bosque
-            'water': (65, 105, 225),        # Azul real
-            'agent': (178, 34, 34),         # Rojo fuego
-            'agent_hungry': (255, 140, 0),  # Naranja
+            'background': (194, 158, 153), # Café claro
+            'vegetation': (34, 139, 34), # Verde bosque
+            'water': (65, 105, 225), # Azul real
+            'agent': (178, 34, 34), # Rojo fuego
+            'agent_hungry': (255, 140, 0), # Naranja
             'agent_thirsty': (70, 130, 180), # Azul acero
             'text': (0, 0, 0),
             'stats_bg': (255, 255, 255, 180)
@@ -30,12 +30,12 @@ class EcosystemVisualizer:
         
         # Fuentes
         self.font = pygame.font.SysFont('Arial', 16)
-        self.title_font = pygame.font.SysFont('Arial', 24, bold=True)
-        self.stats_font = pygame.font.SysFont('Arial', 14)
+        self.title_font = pygame.font.SysFont('Arial', 30, bold=True)
+        self.stats_font = pygame.font.SysFont('Souvenir', 22)
         
         # Control de FPS
         self.clock = pygame.time.Clock()
-        self.fps = 30
+        self.fps = 20
         
     def render(self, ecosystem, species: list, step: int, episode: int, rewards: Dict[str, float] = None, metrics: Dict[str, Any] = None):
         """Renderiza el estado actual del ecosistema"""
@@ -157,7 +157,7 @@ class EcosystemVisualizer:
         self.screen.blit(title, (20, panel_y + 10))
         
         # Estadísticas de agentes
-        y_offset = panel_y + 40
+        y_offset = panel_y + 60
         for i, specie in enumerate(species):
             food_pct = (specie.food / specie.max_food) * 100
             water_pct = (specie.water / specie.max_water) * 100
@@ -167,37 +167,40 @@ class EcosystemVisualizer:
                 f"Agente {i}: Comida: {food_pct:.1f}% | Agua: {water_pct:.1f}% | Energía: {energy:.1f}", 
                 True, self.colors['text']
             )
-            self.screen.blit(agent_text, (20, y_offset))
-            y_offset += 20
+            if(i % 2 == 0):
+                self.screen.blit(agent_text, (20, y_offset))
+            else:
+                self.screen.blit(agent_text, (450, y_offset))
+                y_offset += 20
         
         # Métricas de entrenamiento
         if metrics:
-            y_offset += 10
-            metrics_text = self.stats_font.render(
-                f"Recompensa media: {metrics.get('mean_reward', 0):.2f} | "
-                f"Recompensa total: {metrics.get('total_reward', 0):.2f} | "
-                f"Agentes vivos: {metrics.get('alive_agents', 0)}/{metrics.get('total_agents', 0)}",
-                True, self.colors['text']
-            )
-            self.screen.blit(metrics_text, (20, y_offset))
+            y_offset -= 80
+            metric_text1 = self.stats_font.render(f"Recompensa media: {metrics.get('mean_reward', 0):.2f}", True, self.colors['text'])
+            metric_text2 = self.stats_font.render(f"Recompensa total: {metrics.get('total_reward', 0):.2f}", True, self.colors['text'])
+            metric_text3 = self.stats_font.render(f"Agentes vivos: {metrics.get('alive_agents', 0)}/{metrics.get('total_agents', 0)}", True, self.colors['text'])
+            self.screen.blit(metric_text1, (920, y_offset))
+            self.screen.blit(metric_text2, (920, y_offset + 20))
+            self.screen.blit(metric_text3, (920, y_offset + 40))
         
         # Leyenda
-        legend_x = self.map_width - 250
-        legend_y = panel_y + 40
+        legend_x = 450 #self.map_width - 200
+        legend_y = panel_y + 15
         
         legend_items = [
-            ("🌿 Vegetación", self.colors['vegetation']),
-            ("💧 Agua", self.colors['water']),
-            ("🔴 Agente normal", self.colors['agent']),
-            ("🟠 Agente hambriento", self.colors['agent_hungry']),
-            ("🔵 Agente sediento", self.colors['agent_thirsty'])
+            ("Vegetación", self.colors['vegetation'], 120),
+            ("Agua", self.colors['water'], 80),
+            ("Agente normal", self.colors['agent'], 150),
+            ("Agente hambriento", self.colors['agent_hungry'], 180),
+            ("Agente sediento", self.colors['agent_thirsty'], 0)
         ]
         
-        for i, (text, color) in enumerate(legend_items):
+        for i, (text, color, offset_x) in enumerate(legend_items):
             # Dibujar cuadro de color
-            pygame.draw.rect(self.screen, color, (legend_x, legend_y + i * 25, 15, 15))
+            pygame.draw.rect(self.screen, color, (legend_x, legend_y, 15, 15))
             legend_text = self.stats_font.render(text, True, self.colors['text'])
-            self.screen.blit(legend_text, (legend_x + 20, legend_y + i * 25))
+            self.screen.blit(legend_text, (legend_x + 20, legend_y))
+            legend_x += offset_x
     
     def close(self):
         """Cierra la visualización"""

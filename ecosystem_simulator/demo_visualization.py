@@ -19,7 +19,7 @@ def demo_visualization():
         "water_density": 20,
         "map_width": 1200,
         "map_height": 800,
-        "max_steps": 1000,
+        "max_steps": 350,
     }
     
     # Crear entorno

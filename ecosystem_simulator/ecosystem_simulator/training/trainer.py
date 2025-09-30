@@ -112,7 +112,7 @@ def main(enable_visualization: bool = False):
             map_width=ENV_CFG["map_width"],
             map_height=ENV_CFG["map_height"]
         )
-        print("✅ Visualización en tiempo real activada")
+        print("Visualización en tiempo real activada")
 
     # Importar torch aquí para evitar problemas de importación circular
     try:
@@ -120,7 +120,7 @@ def main(enable_visualization: bool = False):
         HAS_TORCH = True
     except ImportError:
         HAS_TORCH = False
-        print("⚠️  PyTorch no disponible")
+        print("PyTorch no disponible")
 
     # Entrenamiento y monitoreo
     with open("monitor.csv", "w", newline="") as f:
