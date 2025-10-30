@@ -11,3 +11,4 @@ pandas
 GPUtil
 setuptools
 pygame
+pydantic
