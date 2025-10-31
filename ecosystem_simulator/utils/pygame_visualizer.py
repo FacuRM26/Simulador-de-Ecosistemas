@@ -64,10 +64,15 @@ class EcosystemVisualizer:
         self.font = pygame.font.SysFont('Arial', 16)           # Fuente regular
         self.title_font = pygame.font.SysFont('Arial', 30, bold=True)  # Título
         self.stats_font = pygame.font.SysFont('Souvenir', 22)  # Estadísticas
+
+        self.bamboo_image = pygame.image.load("ecosystem_simulator/utils/bamboo_image.png").convert()
+        self.water_image = pygame.image.load("ecosystem_simulator/utils/water_image.png").convert()
+        self.panda_image = pygame.image.load("ecosystem_simulator/utils/panda_image2.png").convert_alpha()
+        self.panda_image = pygame.transform.scale(self.panda_image, (35, 46))
         
         # === CONTROL DE FRAMES POR SEGUNDO ===
         self.clock = pygame.time.Clock()
-        self.fps = 20  # 20 FPS para visualización fluida
+        self.fps = 30  # 30 FPS para visualización fluida
         
     def render(self, ecosystem, species: list, step: int, episode: int, rewards: Dict[str, float] = None, metrics: Dict[str, Any] = None):
         """
@@ -140,9 +145,11 @@ class EcosystemVisualizer:
                 color = tuple(int(c * charge_ratio) for c in self.colors['vegetation'])
                 
                 # Dibujar rectángulo relleno
-                pygame.draw.rect(self.screen, color, (x, y, w, h))
+                #pygame.draw.rect(self.screen, color, (x, y, w, h))
                 # Dibujar borde oscuro
-                pygame.draw.rect(self.screen, (0, 100, 0), (x, y, w, h), 1)
+                #pygame.draw.rect(self.screen, (0, 100, 0), (x, y, w, h), 1)
+                bamboo_image_temp = pygame.transform.scale(self.bamboo_image, (w, h))
+                self.screen.blit(bamboo_image_temp, (x, y))
         
         # === DIBUJAR AGUA ===
         for i in range(len(ecosystem.water_sources['x'])):
@@ -159,9 +166,11 @@ class EcosystemVisualizer:
                 color = tuple(int(c * charge_ratio) for c in self.colors['water'])
                 
                 # Dibujar rectángulo relleno
-                pygame.draw.rect(self.screen, color, (x, y, w, h))
+                #pygame.draw.rect(self.screen, color, (x, y, w, h))
                 # Dibujar borde oscuro
-                pygame.draw.rect(self.screen, (0, 0, 139), (x, y, w, h), 1)
+                #pygame.draw.rect(self.screen, (0, 0, 139), (x, y, w, h), 1)
+                water_image_temp = pygame.transform.scale(self.water_image, (w, h))
+                self.screen.blit(water_image_temp, (x, y))
     
     def _draw_agents(self, species, rewards: Dict[str, float] = None):
         """
@@ -194,11 +203,18 @@ class EcosystemVisualizer:
                 color = self.colors['agent']  # Estado normal (rojo)
             
             # === DIBUJAR CÍRCULO DEL AGENTE ===
-            agent_size = 10  # Radio del círculo
+            #agent_size = 10  # Radio del círculo
             # Dibujar círculo relleno
-            pygame.draw.circle(self.screen, color, (int(specie.x), int(specie.y)), agent_size)
+            #pygame.draw.circle(self.screen, color, (int(specie.x), int(specie.y)), agent_size)
             # Dibujar borde negro
-            pygame.draw.circle(self.screen, (0, 0, 0), (int(specie.x), int(specie.y)), agent_size, 2)
+            #pygame.draw.circle(self.screen, (0, 0, 0), (int(specie.x), int(specie.y)), agent_size, 2)
+            #panda_image = pygame.image.load("ecosystem_simulator/utils/panda_image.jpg").convert()
+
+            #panda_image = pygame.transform.scale(panda_image, (35, 45))
+
+            #panda_image.set_colorkey((0, 0, 0))
+
+            self.screen.blit(self.panda_image, (int(specie.x)-16, int(specie.y)-11))
             
             # === DIBUJAR BARRAS DE ESTADO ===
             self._draw_agent_status(specie, i, rewards)
@@ -241,7 +257,7 @@ class EcosystemVisualizer:
             # Color verde para recompensa positiva, rojo para negativa
             reward_color = (0, 100, 0) if reward >= 0 else (139, 0, 0)
             reward_text = self.font.render(f"{reward:.1f}", True, reward_color)
-            self.screen.blit(reward_text, (x - 10, y + agent_size + 5))
+            self.screen.blit(reward_text, (x - 10, y + agent_size + 22))
     
     def _draw_info_panel(self, step: int, episode: int, rewards: Dict[str, float], metrics: Dict[str, Any], species: list):
         """

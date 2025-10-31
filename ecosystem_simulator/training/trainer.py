@@ -46,7 +46,7 @@ def main(enable_visualization: bool = False):
         "water_density": 20,
         "map_width": 1200,
         "map_height": 800,
-        "max_steps": 350,
+        "max_steps": 500,
     }
 
     # Parámetros de entrenamiento

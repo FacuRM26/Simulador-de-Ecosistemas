@@ -85,7 +85,7 @@ class Specie:
         """Calcula la energía total como el promedio de comida y agua."""
         return 0.5 * (self.food + self.water)
 
-    def metabolize(self, rate: float = 0.3) -> None:
+    def metabolize(self, rate: float = 0.01) -> None:
         """
         Reduce los recursos del agente debido al metabolismo natural.
         
@@ -94,7 +94,7 @@ class Specie:
             Por defecto 0.3 unidades por recurso
         """
         # Reducir comida, asegurando que no sea negativa
-        self.food  = max(0.0, self.food  - rate)
+        self.food  = max(0.0, self.food - rate)
         # Reducir agua, asegurando que no sea negativa
         self.water = max(0.0, self.water - rate)
 
