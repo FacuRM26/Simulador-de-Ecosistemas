@@ -65,9 +65,10 @@ class EcosystemVisualizer:
         self.title_font = pygame.font.SysFont('Arial', 30, bold=True)  # Título
         self.stats_font = pygame.font.SysFont('Souvenir', 22)  # Estadísticas
 
+        # === CARGA DE IMÁGENES ===
         self.bamboo_image = pygame.image.load("ecosystem_simulator/utils/bamboo_image.png").convert()
         self.water_image = pygame.image.load("ecosystem_simulator/utils/water_image.png").convert()
-        self.panda_image = pygame.image.load("ecosystem_simulator/utils/panda_image2.png").convert_alpha()
+        self.panda_image = pygame.image.load("ecosystem_simulator/utils/panda_image.png").convert_alpha()
         self.panda_image = pygame.transform.scale(self.panda_image, (35, 46))
         
         # === CONTROL DE FRAMES POR SEGUNDO ===
@@ -148,6 +149,7 @@ class EcosystemVisualizer:
                 #pygame.draw.rect(self.screen, color, (x, y, w, h))
                 # Dibujar borde oscuro
                 #pygame.draw.rect(self.screen, (0, 100, 0), (x, y, w, h), 1)
+                # Escalar y dibujar imagen de vegetación
                 bamboo_image_temp = pygame.transform.scale(self.bamboo_image, (w, h))
                 self.screen.blit(bamboo_image_temp, (x, y))
         
@@ -169,6 +171,7 @@ class EcosystemVisualizer:
                 #pygame.draw.rect(self.screen, color, (x, y, w, h))
                 # Dibujar borde oscuro
                 #pygame.draw.rect(self.screen, (0, 0, 139), (x, y, w, h), 1)
+                # Escalar y dibujar imagen de agua
                 water_image_temp = pygame.transform.scale(self.water_image, (w, h))
                 self.screen.blit(water_image_temp, (x, y))
     
@@ -202,18 +205,14 @@ class EcosystemVisualizer:
             else:
                 color = self.colors['agent']  # Estado normal (rojo)
             
-            # === DIBUJAR CÍRCULO DEL AGENTE ===
+            # === DIBUJAR AGENTE ===
             #agent_size = 10  # Radio del círculo
             # Dibujar círculo relleno
             #pygame.draw.circle(self.screen, color, (int(specie.x), int(specie.y)), agent_size)
             # Dibujar borde negro
             #pygame.draw.circle(self.screen, (0, 0, 0), (int(specie.x), int(specie.y)), agent_size, 2)
-            #panda_image = pygame.image.load("ecosystem_simulator/utils/panda_image.jpg").convert()
 
-            #panda_image = pygame.transform.scale(panda_image, (35, 45))
-
-            #panda_image.set_colorkey((0, 0, 0))
-
+            # Dibujar imagen del panda en la posición del agente
             self.screen.blit(self.panda_image, (int(specie.x)-16, int(specie.y)-11))
             
             # === DIBUJAR BARRAS DE ESTADO ===
