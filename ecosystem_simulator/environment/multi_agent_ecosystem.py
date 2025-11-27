@@ -9,16 +9,21 @@ para crear un simulador completo donde múltiples agentes aprenden a sobrevivir.
 import random
 import numpy as np
 import gymnasium as gym
-from gymnasium.spaces import Discrete, Box
 from pettingzoo.utils import ParallelEnv
 from typing import Tuple
-
-from ..entities.specie import Specie
+from scipy.spatial import KDTree
+from gymnasium.spaces import Discrete, Box, Dict, MultiBinary
+from ..entities.specie import Specie, Role
 from .ecosystem import Ecosystem
 
-# Acciones posibles: 5 direcciones de movimiento incluyendo quedarse quieto
-DIRECTIONS = ["north", "south", "east", "west", "stay"]
-
+# Direcciones posibles para el movimiento
+DIRECTIONS = ["north", "south", "east", "west", "stay"]  # 0..4
+ACT_EAT   = 5
+ACT_DRINK = 6
+ACT_ATTACK= 7
+BASE_STEP = 4.0 
+BASE_COST = 0.50 
+MOVE_EXTRA = 0.05 
 class MultiAgentEcosystem(ParallelEnv, Ecosystem):
     """
     Entorno multi-agente que simula un ecosistema con especies que necesitan recursos.
@@ -52,6 +57,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         map_height: int = 600,
         max_steps: int = 350,
         gamma: float = 0.995,
+        n_predators: int = 1
     ):
         """
         Inicializa el entorno multi-agente con agentes y recursos.
@@ -80,6 +86,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
         # --- Configuración multi-agente ---
         self.n_agents  = n_agents
+        self.n_predators = max(0, min(n_predators, n_agents))
         # Crear IDs de agentes: "agent_0", "agent_1", etc.
         self.agents    = [f"agent_{i}" for i in range(n_agents)]
         # Lista de todos los agentes posibles (para reset)
@@ -89,18 +96,35 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         
         self.max_steps = max_steps
         self.gamma     = gamma
-    
+        self.action_spaces = {a: Discrete(8) for a in self.agents}
         # --- Definición de espacios de observación y acción ---
         # Raíz cuadrada de 2 para normalizar distancias diagonales máximas
         SQRT2 = np.sqrt(2.0)
+
         # Límites inferiores de la observación
-        low  = np.array([0,0,-1,-1,-1,-1, 0,   0,    0,0], dtype=np.float32)
+        low  = np.array(
+            [0, 0, -1, -1, -1, -1,
+             0, 0,
+             0, 0,
+             0, 0,
+             -1, -1, 0, 0],
+            dtype=np.float32
+        )
+
         # Límites superiores de la observación
-        high = np.array([1,1,  1,  1,  1,  1, SQRT2, SQRT2, 1,1], dtype=np.float32)
-        
-        # Espacio de acción: discreto con 5 opciones (norte, sur, este, oeste, quedarse)
-        self.action_spaces = {a: Discrete(len(DIRECTIONS)) for a in self.agents}
-        # Espacio de observación: continuo con 10 características normalizadas
+        high = np.array(
+            [1, 1,  1,  1,  1,  1,
+             SQRT2, SQRT2,
+             1, 1,
+             1, 1,
+             1, 1, SQRT2, 1],
+            dtype=np.float32
+        )
+
+        # Espacio de acción: 8 acciones (5 movimiento + comer, beber, atacar)
+        self.action_spaces = {a: Discrete(8) for a in self.agents}
+
+        # Espacio de observación: continuo con 16 características normalizadas
         self.observation_spaces = {a: Box(low, high, dtype=np.float32) for a in self.agents}
         
         # Contador de pasos en el episodio actual
@@ -116,32 +140,35 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
     def _reset_species(self):
         """
         Inicializa o reinicia todas las especies (agentes) en el mapa.
-        
+
         Genera posiciones de spawn aleatorias que evitan:
         - Estar demasiado cerca de otros agentes
         - Aparecer sobre recursos existentes
-        
+
         Cada agente comienza con niveles de recursos entre 60% y 80% del máximo.
         """
+
         # Generar posiciones de spawn con restricciones espaciales
         spawn_xy = self._sample_spawn_positions(self.n_agents, min_dist=80.0, avoid_resources=True)
 
         # Función auxiliar para generar nivel inicial aleatorio entre 60% y 80%
-        def init_level(max_val): 
+        def init_level(max_val):
             return float(np.random.uniform(0.60, 0.80) * max_val)
 
         # Crear lista de especies con posiciones y recursos iniciales
-        self.species = [
-            Specie(
-                food=init_level(100),   # Comida inicial aleatoria
-                water=init_level(100),  # Agua inicial aleatoria
-                x=spawn_xy[i][0],       # Posición X del spawn
-                y=spawn_xy[i][1],       # Posición Y del spawn
-                map_width=self.map_width,
-                map_height=self.map_height
+        self.species = []
+        for i in range(self.n_agents):
+            role = Role.PREDATOR if i < self.n_predators else Role.HERBIVORE
+            # puedes ajustar speed/range por rol si quieres
+            speed = 2.0 if role is Role.HERBIVORE else 2.2
+            attack_range = 30.0 if role is Role.PREDATOR else 20.0
+            s = Specie(
+                food=init_level(100), water=init_level(100),
+                x=spawn_xy[i][0], y=spawn_xy[i][1],
+                map_width=self.map_width, map_height=self.map_height,
+                role=role, speed=speed, attack_range=attack_range,
             )
-            for i in range(self.n_agents)
-        ]
+            self.species.append(s)
         
     def observation_space(self, agent: str) -> gym.Space:
         """
@@ -167,49 +194,92 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         """
         return self.action_spaces[agent]
 
-    def reset(self, *, seed: int = None, options: dict = None):
+    def reset(self, *, seed: int | None = None, options: dict | None = None):
+        """Reinicia el entorno a un estado inicial (Parallel API)."""
+        # Si te pasan semilla, úsala en ambos RNGs
+        if seed is not None:
+            random.seed(seed)
+            np.random.seed(seed)
+
+        # Re-crear recursos/árboles kd desde Ecosystem
+        # (asegúrate de que _init_veg/_init_wat existan; si no, usa valores por defecto)
+        init_veg = getattr(self, "_init_veg",  self.vegetation["x"].shape[0] if hasattr(self, "vegetation") else 10)
+        init_wat = getattr(self, "_init_wat",  self.water_sources["x"].shape[0] if hasattr(self, "water_sources") else 8)
+        Ecosystem.__init__(self, self._init_veg, self._init_wat, self.map_width, self.map_height)
+
+        # Re-crear especies (roles, stats, posiciones)
+    def reset(self, *, seed: int | None = None, options: dict | None = None):
         """
-        Reinicia el entorno a un estado inicial para un nuevo episodio.
-        
+        Reinicia el entorno a un estado inicial para un nuevo episodio (Parallel API).
+
         Reinicializa:
-        - El ecosistema (recursos)
-        - Las especies (agentes)
-        - Contadores y métricas
-        
+        - El ecosistema (recursos de vegetación y agua)
+        - Las especies (agentes) con sus roles y estadísticas
+        - Contadores y métricas por episodio
+
         Args:
-            seed: Semilla para generación aleatoria (opcional)
-            options: Opciones adicionales (no usado actualmente)
-            
+            seed: Semilla para la generación aleatoria (opcional).
+            options: Opciones adicionales (no usadas actualmente).
+
         Returns:
-            tuple: (observaciones, infos) para cada agente activo
+            tuple:
+                observations (dict): observación inicial por agente activo.
+                infos        (dict): info inicial por agente (rol, action_mask, etc.).
         """
         # Establecer semilla si se proporciona
         if seed is not None:
             random.seed(seed)
             np.random.seed(seed)
-        
-        # Reiniciar el ecosistema con las densidades iniciales
-        Ecosystem.__init__(self, self._init_veg, self._init_wat, self.map_width, self.map_height)
-        
-        # Reiniciar especies con nuevas posiciones
+
+        # Re-crear recursos/árboles KD desde Ecosystem.
+        # Si _init_veg/_init_wat no existen aún, usamos el tamaño actual o un valor por defecto.
+        init_veg = getattr(
+            self,
+            "_init_veg",
+            self.vegetation["x"].shape[0] if hasattr(self, "vegetation") else 10,
+        )
+        init_wat = getattr(
+            self,
+            "_init_wat",
+            self.water_sources["x"].shape[0] if hasattr(self, "water_sources") else 8,
+        )
+        Ecosystem.__init__(self, init_veg, init_wat, self.map_width, self.map_height)
+
+        # Re-crear especies (roles, stats, posiciones)
         self._reset_species()
-        
-        # Resetear contador de pasos
         self._step_count = 0
 
-        # Repoblar la lista de agentes vivos para el nuevo episodio
-        self._ep_return = {a: 0.0 for a in self.possible_agents}  # Retorno acumulado por agente
-        self._ep_len    = {a: 0   for a in self.possible_agents}  # Longitud del episodio por agente
-        self.agents = list(self.possible_agents)  # Todos los agentes comienzan vivos
+        # Repoblar lista de agentes activos en este episodio
+        self.agents = list(self.possible_agents)
 
-        # Generar observaciones iniciales para cada agente
-        observations = {agent: self._get_obs(self.species[i]) for i, agent in enumerate(self.agents)}
-        infos = {agent: {} for agent in self.agents}
-        
-        # Inicializar contador de pasos con recursos altos (para bonificación homeostasis)
-        self._satiated = {a: 0 for a in self.agents}
-        
+        # Contadores por episodio
+        self._ep_return = {a: 0.0 for a in self.possible_agents}
+        self._ep_len    = {a: 0   for a in self.possible_agents}
+        self._satiated  = {a: 0   for a in self.possible_agents}
+
+        # Observaciones iniciales
+        observations = {
+            agent: self._get_obs(self.species[self._agent_idx[agent]])
+            for agent in self.agents
+        }
+
+        # Infos iniciales útiles (rol + action_mask para que callbacks lo vean desde step 0)
+        infos = {
+            agent: {
+                "role": (
+                    "PREDATOR"
+                    if self.species[self._agent_idx[agent]].role is Role.PREDATOR
+                    else "HERBIVORE"
+                ),
+                "action_mask": self._action_mask(self.species[self._agent_idx[agent]]),
+                "ep_return": 0.0,
+                "ep_len": 0,
+            }
+            for agent in self.agents
+        }
+
         return observations, infos
+
     
     def _norm_dist_to(self, sp: Specie, kind: str) -> float:
         """
@@ -246,6 +316,28 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         # Normalizar por la diagonal del mapa (distancia máxima posible)
         return d / ((self.map_width**2 + self.map_height**2)**0.5)
     
+    def _norm_dist_to_prey(self, sp: Specie) -> float:
+        if sp.role is not Role.PREDATOR:
+            return 1.0
+        preys = [a for a in self.species if a.alive and a.role is Role.HERBIVORE]
+        if not preys:
+            return 1.0
+        if len(preys) >= 2:
+            coords = np.array([(p.x, p.y) for p in preys], dtype=np.float32)
+            idx = np.argmin(((coords[:,0]-sp.x)**2 + (coords[:,1]-sp.y)**2))
+            px, py = coords[idx]
+        else:
+            px, py = preys[0].x, preys[0].y
+        d = ((px - sp.x)**2 + (py - sp.y)**2)**0.5
+        return d / ((self.map_width**2 + self.map_height**2)**0.5)
+
+    def _action_mask(self, sp: Specie) -> np.ndarray:
+        # 8 acciones: mover(0..4), comer(5), beber(6), atacar(7)
+        mask = np.ones(8, dtype=np.int8)
+        if sp.role is Role.HERBIVORE:
+            mask[ACT_ATTACK] = 0
+
+        return mask
     def step(self, actions):
         """
         Ejecuta un paso de simulación para todos los agentes.
@@ -326,53 +418,92 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                 
                 # Calcular distancia normalizada al recurso necesitado (antes del movimiento)
                 d_prev  = self._norm_dist_to(sp, need)
+                prey_prev = self._norm_dist_to_prey(sp) 
 
                 # === PROCESAR ACCIÓN DEL AGENTE ===
-                act_dir_name = DIRECTIONS[actions[agent]]  # Convertir índice a nombre de dirección
-                
-                # Costos metabólicos: base compartido, movimiento tiene costo extra
-                BASE_COST, MOVE_EXTRA = 0.30, 0.02
+                a = int(actions[agent])
 
-                if act_dir_name == "stay":
-                    # Acción de quedarse quieto
-                    sp.metabolize(BASE_COST)  # Solo costo metabólico base
-                    sp.move(0.0, "stay")      # Sin movimiento
-                    # Penalización por inacción (proporcional a la necesidad)
-                    reward -= 0.01 + 0.05 * need_def
-                else:
-                    # Acción de movimiento
-                    sp.metabolize(BASE_COST + MOVE_EXTRA)  # Costo base + extra por moverse
-                    sp.move(2.0, act_dir_name)             # Mover con velocidad 2.0
+                # === 0..4: movimiento ===
+                if 0 <= a <= 4:
+                    act_dir_name = DIRECTIONS[a]
 
-                # === RECOMPENSA POR PROGRESO HACIA RECURSO ===
-                # Calcular nueva distancia al recurso necesitado
-                d_now = self._norm_dist_to(sp, need)
-                # Recompensar si se acercó, penalizar si se alejó
-                reward += 2.0 * (d_prev - d_now)
+                    if act_dir_name == "stay":
+                        # Acción de quedarse quieto: solo costo metabólico base
+                        sp.metabolize(BASE_COST)
+                        sp.move(0.0, "stay")
+                        # Penalización por inacción (proporcional a la necesidad)
+                        reward -= 0.01 + 0.05 * need_def
+                    else:
+                        # Acción de movimiento: costo base + extra por moverse
+                        sp.metabolize(BASE_COST + MOVE_EXTRA)
+                        sp.move(BASE_STEP, act_dir_name)
 
-                # === REWARD SHAPING: Cambio de energía después del movimiento ===
-                energy_after_move[agent] = sp.total_energy
-                reward += 0.1 * (energy_after_move[agent] - prev_energy)
+                    # Recompensa por progreso hacia el recurso necesitado
+                    d_now = self._norm_dist_to(sp, need)
+                    reward += 2.0 * (d_prev - d_now)
 
-                # === DETECCIÓN DE COLISIONES CON RECURSOS ===
-                # Verificar colisión con agua
-                hit = self.collide_resources((sp.x, sp.y), Specie.AGENT_SIZE, self.water_sources)
-                if hit.size:
-                    # Registrar reclamo del agente sobre el primer recurso de agua colisionado
-                    wat_claims.setdefault(int(hit[0]), []).append(agent)
-                
-                # Verificar colisión con vegetación
-                hit = self.collide_resources((sp.x, sp.y), Specie.AGENT_SIZE, self.vegetation)
-                if hit.size:
-                    # Registrar reclamo del agente sobre el primer recurso de vegetación colisionado
-                    veg_claims.setdefault(int(hit[0]), []).append(agent)
+                    # Reward shaping por cambio de energía después del movimiento
+                    energy_after_move[agent] = sp.total_energy
+                    reward += 0.1 * (energy_after_move[agent] - prev_energy)
 
-                # === VERIFICAR CONDICIONES DE MUERTE ===
+                    # Detectar colisión para “claims” (solo si no hizo eat/drink explícito)
+                    hit = self.collide_resources((sp.x, sp.y),
+                                                 Specie.AGENT_SIZE,
+                                                 self.water_sources)
+                    if hit.size:
+                        # Reclamo de agua
+                        wat_claims.setdefault(int(hit[0]), []).append(agent)
+
+                    hit = self.collide_resources((sp.x, sp.y),
+                                                 Specie.AGENT_SIZE,
+                                                 self.vegetation)
+                    if hit.size:
+                        # Reclamo de vegetación
+                        veg_claims.setdefault(int(hit[0]), []).append(agent)
+
+                # === 5: comer vegetación explícito ===
+                elif a == ACT_EAT:
+                    sp.metabolize(BASE_COST)
+                    prey_now = self._norm_dist_to_prey(sp)
+                    if sp.role is Role.PREDATOR:
+                        # El depredador no obtiene beneficio directo de la vegetación,
+                        # pero se recompensa acercarse a la presa
+                        reward += 1.0 * (prey_prev - prey_now)
+                    else:
+                        ate = self.try_eat_vegetation(sp, bite_gain=20.0)
+                        reward += 1.0 if ate else -0.1
+
+                # === 6: beber agua explícito ===
+                elif a == ACT_DRINK:
+                    sp.metabolize(BASE_COST)
+                    drank = self.try_drink(sp, sip_gain=15.0)
+                    if drank:
+                        reward += 0.5
+                    else:
+                        # Intentó beber sin estar sobre agua
+                        reward -= 0.1
+
+                # === 7: atacar (solo depredador) ===
+                elif a == ACT_ATTACK:
+                    sp.metabolize(BASE_COST)
+                    if sp.role is Role.PREDATOR:
+                        hit = self.try_attack(sp, self.species, dmg=50.0)
+                        reward += 3.0 if hit else -0.1
+                        # Métricas por paso (para callbacks)
+                        infos.setdefault(agent, {})
+                        infos[agent]["attack_attempt"] = 1
+                        infos[agent]["attack_hit"] = 1 if hit else 0
+                    else:
+                        # Herbívoro intentando atacar: pequeña penalización
+                        reward -= 0.1
+
+                # === VERIFICAR CONDICIONES DE MUERTE POR RECURSOS ===
                 if (sp.food <= 0) or (sp.water <= 0):
                     # El agente murió por inanición o deshidratación
                     reward   -= 10.0  # Penalización fuerte por morir
                     done_term = True
                     reason    = "starvation" if sp.food <= 0 else "dehydration"
+
 
                 # === BONIFICACIÓN POR HOMEOSTASIS (mantener recursos altos) ===
                 if not done_term:
@@ -413,7 +544,14 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             rewards[agent]      = float(reward)
             terminations[agent] = done_term
             truncations[agent]  = done_trunc
-            infos[agent]        = {"reason": reason}
+            # Etiqueta el rol para que el callback pueda agregar métricas por rol
+            role_str = "PREDATOR" if sp.role is Role.PREDATOR else "HERBIVORE"
+            base_info = {"reason": reason, "role": role_str, "action_mask": self._action_mask(sp)}
+            infos[agent] = {**infos.get(agent, {}), **base_info}
+
+            prev_info = infos.get(agent, {})
+            # Mantén lo que ya estaba (attack_*), y actualiza reason/role/action_mask
+            infos[agent] = {**prev_info, **base_info}
 
             # Agregar a la lista de vivos si no terminó ni se truncó
             if (not done_term) and (not done_trunc):
@@ -492,17 +630,25 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             # Calcular cuántos generar (mitad de los removidos, sin exceder objetivo)
             spawn_veg = max(0, min(max(1, removed_v // 2), target_veg - cur_veg))
             spawn_wat = max(0, min(max(1, removed_w // 2), target_wat - cur_wat))
-            
-            # Generar nuevos recursos si es necesario
-            if spawn_veg:
-                self.spawn_vegetation(n=spawn_veg)
-            if spawn_wat:
-                self.spawn_water(n=spawn_wat)
+            if spawn_veg: self.spawn_vegetation(n=spawn_veg)
+            if spawn_wat: self.spawn_water(n=spawn_wat)
 
-        # === ELIMINAR RECURSOS COMPLETAMENTE AGOTADOS ===
         self._prune_depleted_resources()
 
-        # === ACTUALIZAR OBSERVACIONES Y MÉTRICAS ===
+        # === NUEVO: terminar por depredación (agentes que ahora están muertos) ===
+        for agent in prev_agents:
+            i = self._agent_idx[agent]
+            sp = self.species[i]
+            if (not terminations.get(agent, False)) and sp.alive is False:
+                terminations[agent] = True
+                truncations[agent]  = False
+                infos[agent] = {**infos.get(agent, {}), "reason": "predation"}
+                if agent in alive:
+                    alive.remove(agent)
+
+
+
+        # Observaciones y métricas
         for agent in prev_agents:
             # Generar observación actualizada para cada agente
             obs[agent] = self._get_obs(self.species[self._agent_idx[agent]])
@@ -521,7 +667,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         # === TERMINACIÓN GLOBAL POR TIMEOUT ===
         # Si el episodio alcanzó el máximo de pasos, truncar todos los agentes vivos
         if episode_trunc and len(alive) > 0:
-            for a in alive:
+            for a in list(alive):
                 truncations[a] = True
                 infos[a]["reason"] = "timeout"
             alive = []  # Ningún agente queda vivo tras el timeout
@@ -586,13 +732,42 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             dx_v = dy_v = 0.0
             dist_v = 1.0  # Distancia máxima
 
-        # === NORMALIZAR NIVELES DE RECURSOS DEL AGENTE ===
-        f_norm = sp.food / sp.max_food    # Comida [0-1]
-        w_norm = sp.water / sp.max_water  # Agua [0-1]
+        # Rol (one-hot)
+        role_h = 1.0 if sp.role is Role.HERBIVORE else 0.0
+        role_p = 1.0 if sp.role is Role.PREDATOR else 0.0
 
-        # Construir y retornar observación completa
-        return np.array([f_norm, w_norm, dx_w, dy_w, dx_v, dy_v, dist_w, dist_v, w_avail, v_avail],
-                        dtype=np.float32)
+        # Vector a la presa más cercana (solo útil para depredador)
+        prey_dx = prey_dy = 0.0
+        prey_dist = 1.0
+        prey_avail = 0.0
+        if sp.role is Role.PREDATOR:
+            preys = [a for a in self.species if a.alive and a.role is Role.HERBIVORE]
+            if preys:
+                prey_avail = 1.0
+                if len(preys) >= 2:
+                    coords = np.array([(p.x, p.y) for p in preys], dtype=np.float32)
+                    tree = KDTree(coords)
+                    _, idx_p = tree.query([sp.x, sp.y], k=1)
+                    px, py = coords[int(idx_p)]
+                else:
+                    px, py = preys[0].x, preys[0].y
+                prey_dx, prey_dy = (px - sp.x)/self.map_width, (py - sp.y)/self.map_height
+                prey_dist = (prey_dx**2 + prey_dy**2)**0.5
+
+        f_norm = sp.food / sp.max_food
+        w_norm = sp.water / sp.max_water
+
+        return np.array([
+            f_norm, w_norm,
+            dx_w, dy_w, dx_v, dy_v,
+            dist_w, dist_v,
+            w_avail, v_avail,
+            role_h, role_p,
+            prey_dx, prey_dy, prey_dist, prey_avail
+        ], dtype=np.float32)
+
+    
+
     
     def _sample_spawn_positions(
         self,

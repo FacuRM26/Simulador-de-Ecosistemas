@@ -3,6 +3,10 @@ Módulo que define la clase Specie, que representa un agente individual en el ec
 Cada especie tiene necesidades básicas (comida, agua) y capacidad de movimiento.
 """
 import numpy as np
+from enum import Enum
+class Role(Enum): HERBIVORE=0; PREDATOR=1
+
+
 
 class Specie:
     """
@@ -23,10 +27,10 @@ class Specie:
         map_height (int): Alto del mapa del ecosistema
     """
     __slots__ = (
-        "food", "water",  # Recursos vitales del agente
-        "x", "y",  # Posición en el mapa
-        "max_food", "max_water",  # Capacidades máximas de recursos
-        "map_width", "map_height"  # Dimensiones del mapa para restricciones
+        "food", "water",
+        "x", "y",
+        "max_food", "max_water",
+        "map_width", "map_height", "role", "alive", "hp", "speed","attack_range","attack_cost"
     )
 
     # Tamaño del agente en píxeles (usado para colisiones y límites del mapa)
@@ -42,48 +46,42 @@ class Specie:
         "stay":  (0,  0),   # Quedarse: sin cambio en posición
     }
 
-    def __init__(
-        self,
-        food: float,
-        water: float,
-        x: float = 0,
-        y: float = 0,
-        max_food: float = 100,
-        max_water: float = 100,
-        map_width: int = 800,
-        map_height: int = 600,
-    ):
-        """
-        Inicializa una nueva especie (agente) con recursos y posición.
-        
-        Args:
-            food: Nivel inicial de comida (se limita a max_food)
-            water: Nivel inicial de agua (se limita a max_water)
-            x: Posición inicial en el eje X (por defecto 0)
-            y: Posición inicial en el eje Y (por defecto 0)
-            max_food: Capacidad máxima de comida (por defecto 100)
-            max_water: Capacidad máxima de agua (por defecto 100)
-            map_width: Ancho del mapa (por defecto 800)
-            map_height: Alto del mapa (por defecto 600)
-        """
-        # Guardar los parámetros estáticos del entorno
+    def __init__(self, food, water, x=0, y=0, max_food=100, max_water=100,
+                 map_width=800, map_height=600, role=Role.HERBIVORE,
+                 hp=100, speed=1.0, attack_range=25.0, attack_cost=2.0):
+        # Parámetros estáticos del entorno
         self.max_food   = max_food
         self.max_water  = max_water
         self.map_width  = map_width
         self.map_height = map_height
-
-        # Establecer estado inicial, asegurando que no excedan los máximos
+        self.role = role
+        # Estado inicial (se asegura que food & water no superen sus máximos)
         self.food  = min(food,  max_food)
         self.water = min(water, max_water)
-
-        # Establecer posición inicial
+        self.alive = True
+        self.hp = hp
+        self.speed = speed
+        self.attack_range = attack_range
+        self.attack_cost = attack_cost
+        # Posición inicial
         self.x = x
         self.y = y
+
+    def take_damage(self, dmg: float):
+        self.hp = max(0.0, self.hp - dmg)
+        if self.hp <= 0: self.alive = False
 
     @property
     def total_energy(self) -> float:
         """Calcula la energía total como el promedio de comida y agua."""
         return 0.5 * (self.food + self.water)
+    
+    @property
+    def pos(self): 
+        return (self.x, self.y)
+
+    def is_alive(self): 
+        return bool(self.alive)
 
     def metabolize(self, rate: float = 0.01) -> None:
         """
@@ -98,28 +96,17 @@ class Specie:
         # Reducir agua, asegurando que no sea negativa
         self.water = max(0.0, self.water - rate)
 
-    def move(self, velocity: float, direction: str) -> None:
-        """
-        Mueve al agente en una dirección específica con velocidad dada.
-        
-        Args:
-            velocity: Velocidad de movimiento (multiplicador del vector dirección)
-            direction: Dirección de movimiento ("north", "south", "east", "west", "stay")
-        """
-        # Obtener el vector de dirección (dx, dy) o (0, 0) si no existe
+    def move(self, distance: float = 1.0, direction: str = "stay") -> None:
+        # distancia efectiva = distancia base * speed del agente
+        step = float(distance) * float(self.speed)
         dx, dy = self._DIR_VECTORS.get(direction, (0, 0))
-        
-        # Actualizar posición aplicando velocidad y dirección
-        self.x += dx * velocity
-        self.y += dy * velocity
-        
-        # Calcular mitad del tamaño del agente para los límites
-        half = self.AGENT_SIZE / 2
-        
-        # Restringir X dentro de los límites del mapa
+        self.x += dx * step
+        self.y += dy * step
+        half = self.AGENT_SIZE / 2.0
         self.x = min(max(self.x, half), self.map_width  - half)
         # Restringir Y dentro de los límites del mapa
         self.y = min(max(self.y, half), self.map_height - half)
+
 
     def walk(self, velocity: float, direction: str) -> None:
         """

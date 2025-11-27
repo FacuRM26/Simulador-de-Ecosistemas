@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import re
-
+N_PREDATORS = 2
 def analyze_training_results(csv_path="monitor.csv"):
     """
     Analiza y visualiza los resultados del entrenamiento desde un archivo CSV.
@@ -48,9 +48,13 @@ def analyze_training_results(csv_path="monitor.csv"):
         r_mean = df["r_mean"]  # Recompensa media
         l_mean = df["l_mean"]  # Longitud media
 
-        # === DETECCIÓN DE COLUMNAS OPCIONALES ===
-        # Verificar si hay columnas de razones de terminación
-        reason_cols = ["reason_timeout_pct", "reason_starvation_pct", "reason_dehydration_pct"]
+        # Detección de columnas de razones
+        reason_cols = [
+    "reason_timeout_pct",
+    "reason_starvation_pct",
+    "reason_dehydration_pct",
+    "reason_predation_pct",
+        ]
         has_reasons = all(col in df.columns for col in reason_cols)
         
         # Detectar columnas por agente (retorno)
@@ -151,10 +155,13 @@ def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_
     # === FIGURA 2: RETORNO POR AGENTE ===
     if r_agent_cols:
         plt.figure(figsize=(12, 6))
-        # Graficar cada agente con media móvil
-        for c in r_agent_cols:
+        for idx, c in enumerate(r_agent_cols):
             series = df[c].rolling(SMOOTH_WINDOW, min_periods=1).mean()
-            plt.plot(iters, series, label=c)
+            is_pred = idx < N_PREDATORS
+            label = f"P{idx}" if is_pred else f"H{idx - N_PREDATORS}"
+            # depredadores con línea sólida, herbívoros punteados
+            plt.plot(iters, series, label=label,
+                    linestyle="-" if is_pred else "--")
         plt.title("Return por agente (media móvil)")
         plt.xlabel("Iteración")
         plt.ylabel("Return")
@@ -165,10 +172,12 @@ def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_
     # === FIGURA 3: LONGITUD POR AGENTE ===
     if l_agent_cols:
         plt.figure(figsize=(12, 6))
-        # Graficar cada agente con media móvil
-        for c in l_agent_cols:
+        for idx, c in enumerate(l_agent_cols):
             series = df[c].rolling(SMOOTH_WINDOW, min_periods=1).mean()
-            plt.plot(iters, series, label=c)
+            is_pred = idx < N_PREDATORS
+            label = f"P{idx}" if is_pred else f"H{idx - N_PREDATORS}"
+            plt.plot(iters, series, label=label,
+                    linestyle="-" if is_pred else "--")
         plt.title("Longitud por agente (media móvil)")
         plt.xlabel("Iteración")
         plt.ylabel("Timesteps")
@@ -178,13 +187,12 @@ def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_
 
     # === FIGURA 4: RAZONES DE TERMINACIÓN ===
     if has_reasons:
-        # Extraer series de razones
-        timeout_pct, starvation_pct, dehydration_pct = [df[c] for c in reason_cols]
-        
-        plt.figure(figsize=(10,4))
-        plt.plot(iters, timeout_pct,     label="timeout %")      # Azul: timeout
-        plt.plot(iters, starvation_pct,  label="starvation %")   # Naranja: inanición
-        plt.plot(iters, dehydration_pct, label="dehydration %")  # Verde: deshidratación
+        plt.figure(figsize=(10, 4))
+        for c in reason_cols:
+            serie = df[c]
+            label = c.replace("reason_", "").replace("_pct", " %")
+            plt.plot(iters, serie, label=label)
+
         plt.title("Razones de terminación de episodios")
         plt.xlabel("Iteración")
         plt.ylabel("Porcentaje")
