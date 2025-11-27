@@ -9,6 +9,23 @@ class Role(Enum): HERBIVORE=0; PREDATOR=1
 
 
 class Specie:
+    """
+    Clase que representa un agente individual (especie) en el ecosistema.
+    
+    Esta clase maneja los recursos vitales del agente (comida y agua), su posición
+    en el mapa, y su capacidad de moverse en diferentes direcciones. Utiliza __slots__
+    para optimización de memoria ya que pueden existir múltiples instancias.
+    
+    Atributos:
+        food (float): Nivel actual de comida del agente
+        water (float): Nivel actual de agua del agente
+        x (float): Posición X del agente en el mapa
+        y (float): Posición Y del agente en el mapa
+        max_food (float): Capacidad máxima de comida
+        max_water (float): Capacidad máxima de agua
+        map_width (int): Ancho del mapa del ecosistema
+        map_height (int): Alto del mapa del ecosistema
+    """
     __slots__ = (
         "food", "water",
         "x", "y",
@@ -16,16 +33,17 @@ class Specie:
         "map_width", "map_height", "role", "alive", "hp", "speed","attack_range","attack_cost"
     )
 
-    # Tamaño del agente en el entorno (usa para evitar salirse del mapa)
+    # Tamaño del agente en píxeles (usado para colisiones y límites del mapa)
     AGENT_SIZE = 20
 
-    # Vectores de dirección para movimiento
+    # Diccionario de vectores de dirección para el movimiento
+    # Cada dirección mapea a un vector (dx, dy) que indica el cambio en x e y
     _DIR_VECTORS = {
-        "north": (0, -1),
-        "south": (0,  1),
-        "east":  (1,  0),
-        "west":  (-1, 0),
-        "stay":  (0,  0),
+        "north": (0, -1),   # Arriba: sin cambio en x, -1 en y
+        "south": (0,  1),   # Abajo: sin cambio en x, +1 en y
+        "east":  (1,  0),   # Derecha: +1 en x, sin cambio en y
+        "west":  (-1, 0),   # Izquierda: -1 en x, sin cambio en y
+        "stay":  (0,  0),   # Quedarse: sin cambio en posición
     }
 
     def __init__(self, food, water, x=0, y=0, max_food=100, max_water=100,
@@ -65,9 +83,17 @@ class Specie:
     def is_alive(self): 
         return bool(self.alive)
 
-    def metabolize(self, rate: float = 0.3) -> None:
-        """Reduce la comida y agua por metabolismo, asegurando que no sean negativas."""
-        self.food  = max(0.0, self.food  - rate)
+    def metabolize(self, rate: float = 0.01) -> None:
+        """
+        Reduce los recursos del agente debido al metabolismo natural.
+        
+        Args:
+            rate: Tasa de consumo metabólico (cantidad reducida por paso)
+            Por defecto 0.3 unidades por recurso
+        """
+        # Reducir comida, asegurando que no sea negativa
+        self.food  = max(0.0, self.food - rate)
+        # Reducir agua, asegurando que no sea negativa
         self.water = max(0.0, self.water - rate)
 
     def move(self, distance: float = 1.0, direction: str = "stay") -> None:
@@ -78,9 +104,19 @@ class Specie:
         self.y += dy * step
         half = self.AGENT_SIZE / 2.0
         self.x = min(max(self.x, half), self.map_width  - half)
+        # Restringir Y dentro de los límites del mapa
         self.y = min(max(self.y, half), self.map_height - half)
 
 
     def walk(self, velocity: float, direction: str) -> None:
+        """
+        Ejecuta un ciclo completo de movimiento: metabolismo + desplazamiento.
+        
+        Args:
+            velocity: Velocidad de movimiento
+            direction: Dirección de movimiento
+        """
+        # Primero: consumir energía por metabolismo
         self.metabolize()
+        # Segundo: realizar el movimiento y restringir posición
         self.move(velocity, direction)

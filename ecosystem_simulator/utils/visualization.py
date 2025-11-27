@@ -1,5 +1,12 @@
 """
 Módulo para visualizar los resultados del entrenamiento.
+
+Proporciona funciones para analizar y graficar las métricas de entrenamiento
+guardadas en archivos CSV, incluyendo:
+- Recompensas y longitudes de episodios
+- Métricas por agente individual
+- Razones de terminación
+- Promedios móviles y acumulados
 """
 import pandas as pd
 import numpy as np
@@ -7,22 +14,39 @@ import matplotlib.pyplot as plt
 import re
 N_PREDATORS = 2
 def analyze_training_results(csv_path="monitor.csv"):
-    """Analiza y visualiza los resultados del entrenamiento."""
+    """
+    Analiza y visualiza los resultados del entrenamiento desde un archivo CSV.
+    
+    Lee el archivo CSV de monitoreo, procesa las métricas y genera múltiples
+    gráficos para analizar el progreso del entrenamiento:
+    
+    1. Métricas agregadas (recompensa y longitud media)
+    2. Retorno por agente individual
+    3. Longitud por agente individual  
+    4. Razones de terminación
+    
+    También imprime un resumen estadístico en consola.
+    
+    Args:
+        csv_path: Ruta al archivo CSV de monitoreo (por defecto "monitor.csv")
+    """
     try:
+        # Leer archivo CSV
         df = pd.read_csv(csv_path)
 
-        # Conversión a numérico
+        # Convertir todas las columnas numéricas (excepto 'iter')
         for c in df.columns:
             if c != "iter":
                 df[c] = pd.to_numeric(df[c], errors="coerce")
 
-        # Verificación de columnas requeridas
+        # Verificar que el CSV tenga las columnas esenciales
         if not {"r_mean", "l_mean"}.issubset(df.columns):
             raise KeyError("El CSV no tiene r_mean/l_mean.")
 
+        # Extraer columnas principales
         iters = df["iter"].values if "iter" in df.columns else np.arange(len(df))
-        r_mean = df["r_mean"]
-        l_mean = df["l_mean"]
+        r_mean = df["r_mean"]  # Recompensa media
+        l_mean = df["l_mean"]  # Longitud media
 
         # Detección de columnas de razones
         reason_cols = [
@@ -33,24 +57,30 @@ def analyze_training_results(csv_path="monitor.csv"):
         ]
         has_reasons = all(col in df.columns for col in reason_cols)
         
-        # Detección de columnas por agente
+        # Detectar columnas por agente (retorno)
         r_agent_cols = sorted([c for c in df.columns if c.startswith("r_agent_")],
                             key=lambda x: int(re.search(r"(\d+)$", x).group(1)))
+        # Detectar columnas por agente (longitud)
         l_agent_cols = sorted([c for c in df.columns if c.startswith("l_agent_")],
                             key=lambda x: int(re.search(r"(\d+)$", x).group(1)))
 
-        # Suavizado dinámico
+        # === CALCULAR SUAVIZADOS ===
+        # Ventana de suavizado dinámica: entre 5 y 20, o 1/3 de los datos
         SMOOTH_WINDOW = max(5, min(20, max(1, len(df)//3)))
+        
+        # Media móvil (suaviza oscilaciones)
         mov_avg_r = r_mean.rolling(SMOOTH_WINDOW, min_periods=1).mean()
         mov_avg_l = l_mean.rolling(SMOOTH_WINDOW, min_periods=1).mean()
+        
+        # Media acumulativa (tendencia general)
         cumavg_r = r_mean.expanding().mean()
         cumavg_l = l_mean.expanding().mean()
 
-        # Visualización
+        # === GENERAR VISUALIZACIONES ===
         _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_l, 
                      r_agent_cols, l_agent_cols, df, SMOOTH_WINDOW, reason_cols, has_reasons)
 
-        # Resumen numérico
+        # === IMPRIMIR RESUMEN ESTADÍSTICO ===
         print("\nResumen:")
         print(f"r_mean: mean={np.nanmean(r_mean):.3f}, std={np.nanstd(r_mean):.3f}, "
               f"median={np.nanmedian(r_mean):.3f}")
@@ -64,18 +94,39 @@ def analyze_training_results(csv_path="monitor.csv"):
 
 def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_l,
                  r_agent_cols, l_agent_cols, df, SMOOTH_WINDOW, reason_cols, has_reasons):
-    """Crea las visualizaciones de los resultados."""
-    # Figura 1: Métricas agregadas
+    """
+    Crea todas las visualizaciones de los resultados del entrenamiento.
+    
+    Genera 4 tipos de figuras:
+    1. Métricas agregadas: recompensa y longitud con suavizados
+    2. Retorno por agente individual
+    3. Longitud por agente individual
+    4. Porcentajes de razones de terminación
+    
+    Args:
+        iters: Array de iteraciones
+        r_mean, l_mean: Series de recompensa y longitud media
+        mov_avg_r, mov_avg_l: Medias móviles
+        cumavg_r, cumavg_l: Medias acumuladas
+        r_agent_cols, l_agent_cols: Listas de nombres de columnas por agente
+        df: DataFrame con todos los datos
+        SMOOTH_WINDOW: Tamaño de ventana para suavizado
+        reason_cols: Lista de nombres de columnas de razones
+        has_reasons: Flag indicando si hay datos de razones
+    """
+    # === FIGURA 1: MÉTRICAS AGREGADAS ===
     plt.figure(figsize=(12, 8))
 
+    # Subplot 1: Recompensa media
     plt.subplot(2, 2, 1)
-    plt.plot(iters, r_mean, alpha=0.3, label="r_mean (raw)")
-    plt.plot(iters, mov_avg_r, label=f"r_mean mov.avg (w={SMOOTH_WINDOW})")
+    plt.plot(iters, r_mean, alpha=0.3, label="r_mean (raw)")  # Datos crudos translúcidos
+    plt.plot(iters, mov_avg_r, label=f"r_mean mov.avg (w={SMOOTH_WINDOW})")  # Media móvil
     plt.title("Recompensa media por iteración")
     plt.xlabel("Iteración")
     plt.ylabel("Return")
     plt.legend()
 
+    # Subplot 2: Longitud media
     plt.subplot(2, 2, 3)
     plt.plot(iters, l_mean, alpha=0.3, label="l_mean (raw)")
     plt.plot(iters, mov_avg_l, label=f"l_mean mov.avg (w={SMOOTH_WINDOW})")
@@ -84,12 +135,14 @@ def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_
     plt.ylabel("Timesteps")
     plt.legend()
 
+    # Subplot 3: Retorno acumulado
     plt.subplot(2, 2, 2)
     plt.plot(iters, cumavg_r)
     plt.title("Return acumulado (promedio)")
     plt.xlabel("Iteración")
     plt.ylabel("Return")
 
+    # Subplot 4: Longitud acumulada
     plt.subplot(2, 2, 4)
     plt.plot(iters, cumavg_l)
     plt.title("Longitud acumulada (promedio)")
@@ -99,7 +152,7 @@ def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_
     plt.tight_layout()
     plt.show()
 
-    # Figura 2: Retorno por agente
+    # === FIGURA 2: RETORNO POR AGENTE ===
     if r_agent_cols:
         plt.figure(figsize=(12, 6))
         for idx, c in enumerate(r_agent_cols):
@@ -116,7 +169,7 @@ def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_
         plt.tight_layout()
         plt.show()
 
-    # Figura 3: Longitud por agente
+    # === FIGURA 3: LONGITUD POR AGENTE ===
     if l_agent_cols:
         plt.figure(figsize=(12, 6))
         for idx, c in enumerate(l_agent_cols):
@@ -132,7 +185,7 @@ def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_
         plt.tight_layout()
         plt.show()
 
-    # Figura 4: Razones de terminación
+    # === FIGURA 4: RAZONES DE TERMINACIÓN ===
     if has_reasons:
         plt.figure(figsize=(10, 4))
         for c in reason_cols:
