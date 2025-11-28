@@ -17,11 +17,11 @@ from ..entities.specie import Specie, Role
 from .ecosystem import Ecosystem
 
 # Direcciones posibles para el movimiento
-DIRECTIONS = ["north", "south", "east", "west", "stay"]  # 0..4
-ACT_EAT   = 5
-ACT_DRINK = 6
-ACT_ATTACK= 7
-BASE_STEP = 4.0 
+DIRECTIONS = ["north", "south", "east", "west"]
+ACT_EAT    = 4
+ACT_DRINK  = 5
+ACT_ATTACK = 6
+BASE_STEP = 2.0 
 BASE_COST = 0.50 
 MOVE_EXTRA = 0.05 
 class MultiAgentEcosystem(ParallelEnv, Ecosystem):
@@ -96,7 +96,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         
         self.max_steps = max_steps
         self.gamma     = gamma
-        self.action_spaces = {a: Discrete(8) for a in self.agents}
+        self.action_spaces = {a: Discrete(7) for a in self.agents}
         # --- Definición de espacios de observación y acción ---
         # Raíz cuadrada de 2 para normalizar distancias diagonales máximas
         SQRT2 = np.sqrt(2.0)
@@ -120,9 +120,6 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
              1, 1, SQRT2, 1],
             dtype=np.float32
         )
-
-        # Espacio de acción: 8 acciones (5 movimiento + comer, beber, atacar)
-        self.action_spaces = {a: Discrete(8) for a in self.agents}
 
         # Espacio de observación: continuo con 16 características normalizadas
         self.observation_spaces = {a: Box(low, high, dtype=np.float32) for a in self.agents}
@@ -178,7 +175,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             agent: ID del agente (ej. "agent_0")
             
         Returns:
-            gym.Space: Espacio de observación (Box de 10 dimensiones)
+            gym.Space: Espacio de observación (Box de 16 dimensiones)
         """
         return self.observation_spaces[agent]
 
@@ -193,20 +190,6 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             gym.Space: Espacio de acción (Discrete con 5 opciones)
         """
         return self.action_spaces[agent]
-
-    def reset(self, *, seed: int | None = None, options: dict | None = None):
-        """Reinicia el entorno a un estado inicial (Parallel API)."""
-        # Si te pasan semilla, úsala en ambos RNGs
-        if seed is not None:
-            random.seed(seed)
-            np.random.seed(seed)
-
-        # Re-crear recursos/árboles kd desde Ecosystem
-        # (asegúrate de que _init_veg/_init_wat existan; si no, usa valores por defecto)
-        init_veg = getattr(self, "_init_veg",  self.vegetation["x"].shape[0] if hasattr(self, "vegetation") else 10)
-        init_wat = getattr(self, "_init_wat",  self.water_sources["x"].shape[0] if hasattr(self, "water_sources") else 8)
-        Ecosystem.__init__(self, self._init_veg, self._init_wat, self.map_width, self.map_height)
-
         # Re-crear especies (roles, stats, posiciones)
     def reset(self, *, seed: int | None = None, options: dict | None = None):
         """
@@ -332,12 +315,12 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         return d / ((self.map_width**2 + self.map_height**2)**0.5)
 
     def _action_mask(self, sp: Specie) -> np.ndarray:
-        # 8 acciones: mover(0..4), comer(5), beber(6), atacar(7)
-        mask = np.ones(8, dtype=np.int8)
+        # 7 acciones: mover(0..3), comer(4), beber(5), atacar(6)
+        mask = np.ones(7, dtype=np.int8)
         if sp.role is Role.HERBIVORE:
-            mask[ACT_ATTACK] = 0
-
+            mask[ACT_ATTACK] = 0  # ahora ACT_ATTACK = 6, índice válido
         return mask
+
     def step(self, actions):
         """
         Ejecuta un paso de simulación para todos los agentes.
@@ -424,41 +407,35 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                 a = int(actions[agent])
 
                 # === 0..4: movimiento ===
-                if 0 <= a <= 4:
+                if 0 <= a <= 3:
                     act_dir_name = DIRECTIONS[a]
-
-                    if act_dir_name == "stay":
-                        # Acción de quedarse quieto: solo costo metabólico base
-                        sp.metabolize(BASE_COST)
-                        sp.move(0.0, "stay")
-                        # Penalización por inacción (proporcional a la necesidad)
-                        reward -= 0.01 + 0.05 * need_def
-                    else:
-                        # Acción de movimiento: costo base + extra por moverse
-                        sp.metabolize(BASE_COST + MOVE_EXTRA)
-                        sp.move(BASE_STEP, act_dir_name)
-
+                    prev_x, prev_y = sp.x, sp.y
+                    # Todos los movimientos tienen el mismo coste
+                    sp.metabolize(BASE_COST + MOVE_EXTRA)
+                    sp.move(BASE_STEP, act_dir_name)
+                    # Si prácticamente no se movió (choque con pared), penalizar
+                    moved_dist = abs(sp.x - prev_x) + abs(sp.y - prev_y)
+                    if moved_dist < 1e-3:
+                        # Choque contra el borde: movimiento inútil
+                        reward -= 0.3
                     # Recompensa por progreso hacia el recurso necesitado
                     d_now = self._norm_dist_to(sp, need)
-                    reward += 2.0 * (d_prev - d_now)
-
-                    # Reward shaping por cambio de energía después del movimiento
+                    reward += 6.0 * (d_prev - d_now)
+                    reward += 1.0 * (1.0 - d_now)
                     energy_after_move[agent] = sp.total_energy
-                    reward += 0.1 * (energy_after_move[agent] - prev_energy)
+                    reward += 0.02 * (energy_after_move[agent] - prev_energy)
 
-                    # Detectar colisión para “claims” (solo si no hizo eat/drink explícito)
+                    # Reclamos de recursos...
                     hit = self.collide_resources((sp.x, sp.y),
-                                                 Specie.AGENT_SIZE,
-                                                 self.water_sources)
+                                                Specie.AGENT_SIZE,
+                                                self.water_sources)
                     if hit.size:
-                        # Reclamo de agua
                         wat_claims.setdefault(int(hit[0]), []).append(agent)
 
                     hit = self.collide_resources((sp.x, sp.y),
-                                                 Specie.AGENT_SIZE,
-                                                 self.vegetation)
+                                                Specie.AGENT_SIZE,
+                                                self.vegetation)
                     if hit.size:
-                        # Reclamo de vegetación
                         veg_claims.setdefault(int(hit[0]), []).append(agent)
 
                 # === 5: comer vegetación explícito ===
@@ -503,6 +480,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                     reward   -= 10.0  # Penalización fuerte por morir
                     done_term = True
                     reason    = "starvation" if sp.food <= 0 else "dehydration"
+                    sp.alive  = False
 
 
                 # === BONIFICACIÓN POR HOMEOSTASIS (mantener recursos altos) ===
@@ -539,6 +517,19 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                 # Penalizaciones crecientes por niveles críticos
                 if min_norm < 0.15: reward -= 0.5   # Nivel crítico
                 if min_norm < 0.08: reward -= 1.0   # Nivel muy crítico
+                # === PENALIZACIÓN POR PEGARSE A LAS PAREDES ===
+                # Distancia normalizada a cada borde (0 = en el borde, ~0.5 centro)
+                dist_left   = sp.x / self.map_width
+                dist_right  = (self.map_width  - sp.x) / self.map_width
+                dist_top    = sp.y / self.map_height
+                dist_bottom = (self.map_height - sp.y) / self.map_height
+
+                dist_to_edge = min(dist_left, dist_right, dist_top, dist_bottom)
+
+                edge_margin = 0.15  # 15% del mapa
+                if dist_to_edge < edge_margin:
+                    # Penalización lineal: máximo -0.5 pegado al borde
+                    reward -= 0.5 * (edge_margin - dist_to_edge) / edge_margin
 
             # === GUARDAR RESULTADOS DEL AGENTE ===
             rewards[agent]      = float(reward)
@@ -546,12 +537,13 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             truncations[agent]  = done_trunc
             # Etiqueta el rol para que el callback pueda agregar métricas por rol
             role_str = "PREDATOR" if sp.role is Role.PREDATOR else "HERBIVORE"
-            base_info = {"reason": reason, "role": role_str, "action_mask": self._action_mask(sp)}
+            base_info = {
+                "reason": reason,
+                "role": role_str,
+                "action_mask": self._action_mask(sp),
+            }
             infos[agent] = {**infos.get(agent, {}), **base_info}
-
-            prev_info = infos.get(agent, {})
             # Mantén lo que ya estaba (attack_*), y actualiza reason/role/action_mask
-            infos[agent] = {**prev_info, **base_info}
 
             # Agregar a la lista de vivos si no terminó ni se truncó
             if (not done_term) and (not done_trunc):
@@ -611,10 +603,13 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         # === REWARD SHAPING ADICIONAL: Cambio de energía tras consumo ===
         # Aplicar reward shaping por cambio de energía después de consumir recursos
         for a in prev_agents:
-            if (a in energy_after_move) and (not terminations[a]):
+            if (a in energy_after_move) and (not terminations.get(a, False)):
                 # Comparar energía actual con energía después del movimiento
                 post = self.species[self._agent_idx[a]].total_energy
-                rewards[a] += 0.1 * (post - energy_after_move[a])
+                # Aumentar la recompensa de ESE agente en función del cambio de energía
+                rewards[a] = float(
+                    rewards.get(a, 0.0) + 0.02 * (post - energy_after_move[a])
+                )
                 
         # === REPONER RECURSOS CONSUMIDOS ===
         # Solo si el episodio no terminó por timeout global

@@ -2,19 +2,13 @@
 Módulo principal para el entrenamiento del modelo RL.
 """
 import os
-from unittest import result
 os.environ.pop("AIR_VERBOSITY", None)
 import logging
 import re
-import random
 import numpy as np
 import csv
-import pandas as pd
-import matplotlib.pyplot as plt
 import ray
-from ray import tune
 from ray.tune.registry import register_env
-from ray.rllib.env import PettingZooEnv
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.env.wrappers.pettingzoo_env import ParallelPettingZooEnv
 from ray.rllib.policy.policy import PolicySpec
@@ -22,8 +16,8 @@ from ray.rllib.policy.policy import PolicySpec
 from ..environment.multi_agent_ecosystem import MultiAgentEcosystem
 from .callbacks import PerAgentAndReasonMetrics
 
-NUM_ITERS       = 100          # o el valor que ya uses
-VIS_START_FRAC  = 0.5          # empezar al 50% del entrenamiento
+NUM_ITERS       = 200         
+VIS_START_FRAC  = 0.7         # empezar al 50% del entrenamiento
 VIS_INTERVAL    = 10  
 
 # Para importar el visualizer
@@ -47,7 +41,7 @@ def main(enable_visualization: bool = False):
         "veg_density": 15,
         "water_density": 10,
         "map_width": 800,
-        "map_height": 500,
+        "map_height": 600,
         "max_steps": 350,
         "n_predators": 2,
     }
@@ -193,28 +187,23 @@ def main(enable_visualization: bool = False):
                     obs, _ = viz_env.reset()
 
                     for viz_step in range(ENV_CFG["max_steps"]):
-                        if not obs:  # por si ya no hay agentes vivos
+                        if not obs:
                             break
 
                         actions = {}
-                        for agent in viz_env.agents:
-                            if agent in obs:
-                                try:
-                                    idx = int(agent.split("_")[1])
-                                    pol_id = (
-                                        "pred"
-                                        if idx < ENV_CFG["n_predators"]
-                                        else "herb"
-                                    )
-                                    out = trainer.get_policy(pol_id).compute_single_action(
-                                        obs[agent],
-                                        explore=False,
-                                    )
-                                    action = out[0] if isinstance(out, tuple) else out
-                                    actions[agent] = action
-                                except Exception:
-                                    # fallback aleatorio si algo raro pasa
-                                    actions[agent] = viz_env.action_space(agent).sample()
+                        for agent_id, agent_obs in obs.items():
+                            try:
+                                idx = int(agent_id.split("_")[1])
+                                pol_id = "pred" if idx < ENV_CFG["n_predators"] else "herb"
+
+                                out = trainer.get_policy(pol_id).compute_single_action(
+                                    agent_obs,
+                                    explore=False,
+                                )
+                                action = out[0] if isinstance(out, tuple) else out
+                                actions[agent_id] = action
+                            except Exception:
+                                actions[agent_id] = viz_env.action_space(agent_id).sample()
 
                         obs, rewards, terminations, truncations, infos = viz_env.step(actions)
 
