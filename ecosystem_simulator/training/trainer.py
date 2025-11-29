@@ -16,8 +16,8 @@ from ray.rllib.policy.policy import PolicySpec
 from ..environment.multi_agent_ecosystem import MultiAgentEcosystem
 from .callbacks import PerAgentAndReasonMetrics
 
-NUM_ITERS       = 200         
-VIS_START_FRAC  = 0.7         # empezar al 50% del entrenamiento
+NUM_ITERS       = 350         
+VIS_START_FRAC  = 0.5         # empezar al 50% del entrenamiento
 VIS_INTERVAL    = 10  
 
 # Para importar el visualizer

@@ -192,12 +192,15 @@ def train_with_realtime_godot():
         .callbacks(callbacks_class=CombinedCallbacks)  # Solo métricas # PerAgentAndReasonMetrics
         .framework("torch")
         .multi_agent(
-            policies={"pred": PolicySpec(), "herb": PolicySpec(),},
+            policies={
+                "pred": PolicySpec(), 
+                "herb": PolicySpec(),
+            },
             policy_mapping_fn=lambda agent_id, *a, **k: (
                 "pred" if int(agent_id.split("_")[1]) < ENV_CFG["n_predators"] else "herb"
             ),
         )
-        .env_runners(num_env_runners=NUM_RUNNERS, rollout_fragment_length=50, sample_timeout_s=300)
+        #.env_runners(num_env_runners=NUM_RUNNERS, rollout_fragment_length=50, sample_timeout_s=300)
     )
 
     config = config.api_stack(
@@ -207,7 +210,7 @@ def train_with_realtime_godot():
     config = config.resources(num_gpus=0)
 
     try:
-        config = config.rollouts(batch_mode="complete_episodes") # truncate_episodes
+        config = config.rollouts(batch_mode="truncate_episodes")
     except Exception:
         pass
 
@@ -255,7 +258,7 @@ def train_with_realtime_godot():
 
         trainer = config.build()
 
-        for i in range(50): # Número de iteraciones de entrenamiento
+        for i in range(100): # Número de iteraciones de entrenamiento
             result = trainer.train()
 
             # Extracción de métricas
@@ -279,7 +282,10 @@ def train_with_realtime_godot():
             att_hit         = m("attacks_hit")
             att_rate        = m("attack_hit_rate")
 
-            row = [i, r_mean, l_mean, timeout_pct, starvation_pct, dehydration_pct, predation_pct, att_attempt, att_hit, att_rate]
+            row = [i, r_mean, l_mean, 
+                   timeout_pct, starvation_pct, 
+                   dehydration_pct, predation_pct, 
+                   att_attempt, att_hit, att_rate]
 
             for a in range(n_agents):
                 row.append(m(f"agent_{a}/episode_return"))
@@ -292,7 +298,7 @@ def train_with_realtime_godot():
 
             # ACTUALIZAR VISUALIZACIÓN para Godot
             try:
-                if i < 35: 
+                if i < 80: 
                     continue # Esperar algunas iteraciones antes de visualizar
                 # Crear un entorno separado para visualización
                 viz_env = MultiAgentEcosystem(**ENV_CFG)
