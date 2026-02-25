@@ -17,7 +17,7 @@ from ..environment.multi_agent_ecosystem import MultiAgentEcosystem
 from .callbacks import PerAgentAndReasonMetrics
 
 NUM_ITERS       = 350         
-VIS_START_FRAC  = 0.5         # empezar al 50% del entrenamiento
+VIS_START_FRAC  = 0         # empezar al 50% del entrenamiento
 VIS_INTERVAL    = 10  
 
 # Para importar el visualizer
@@ -30,6 +30,90 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+def build_config(env_cfg: dict, num_runners: int = 4, callbacks_class=None):
+    """
+    Construye y retorna la configuración PPO lista para usar.
+
+    Args:
+        env_cfg: Diccionario de configuración del entorno.
+        num_runners: Número de workers paralelos.
+        callbacks_class: Clase de callbacks a usar (por defecto PerAgentAndReasonMetrics).
+    
+    Returns:
+        PPOConfig configurado.
+    """
+    from ray.tune.registry import register_env
+    from ray.rllib.algorithms.ppo import PPOConfig
+    from ray.rllib.env.wrappers.pettingzoo_env import ParallelPettingZooEnv
+    from ray.rllib.policy.policy import PolicySpec
+    from ..environment.multi_agent_ecosystem import MultiAgentEcosystem
+
+    if callbacks_class is None:
+        callbacks_class = PerAgentAndReasonMetrics
+
+    FRAG = env_cfg["max_steps"]
+    TOTAL_BATCH = num_runners * FRAG
+
+    register_env(
+        "multi_eco",
+        lambda cfg: ParallelPettingZooEnv(MultiAgentEcosystem(**cfg))
+    )
+
+    config = (
+        PPOConfig()
+        .environment(env="multi_eco", env_config=env_cfg)
+        .callbacks(callbacks_class)
+        .framework("torch")
+        .multi_agent(
+            policies={
+                "pred": PolicySpec(),
+                "herb": PolicySpec(),
+            },
+            policy_mapping_fn=lambda agent_id, *a, **k: (
+                "pred" if int(agent_id.split("_")[1]) < env_cfg["n_predators"] else "herb"
+            ),
+        )
+    )
+    config = config.api_stack(
+        enable_rl_module_and_learner=False,
+        enable_env_runner_and_connector_v2=False
+    )
+    config = config.resources(num_gpus=0)
+
+    try:
+        config = config.rollouts(batch_mode="truncate_episodes")
+    except Exception:
+        pass
+
+    config = config.env_runners(
+        num_env_runners=num_runners,
+        rollout_fragment_length=FRAG,
+        sample_timeout_s=300
+    )
+
+    try:
+        config = config.training(
+            train_batch_size=TOTAL_BATCH,
+            minibatch_size=200,
+            num_epochs=2,
+            lr=3e-4,
+            gamma=0.99, lambda_=0.95,
+            clip_param=0.2, vf_clip_param=10.0,
+            grad_clip=0.5, entropy_coeff=0.01
+        )
+    except TypeError:
+        config = config.training(
+            train_batch_size=TOTAL_BATCH,
+            sgd_minibatch_size=200,
+            num_sgd_iter=2,
+            lr=3e-4,
+            gamma=0.99, lambda_=0.95,
+            clip_param=0.2, vf_clip_param=10.0,
+            grad_clip=0.5, entropy_coeff=0.01
+        )
+
+    return config
 
 def main(enable_visualization: bool = False):
     """Función principal de entrenamiento con visualización opcional"""
