@@ -30,7 +30,10 @@ class Specie:
         "food", "water",
         "x", "y",
         "max_food", "max_water",
-        "map_width", "map_height", "role", "alive", "hp", "speed","attack_range","attack_cost"
+        "map_width", "map_height",
+        "role", "alive",
+        "hp", "speed",
+        "attack_range", "attack_cost", "attack_cd"
     )
 
     # Tamaño del agente en píxeles (usado para colisiones y límites del mapa)
@@ -56,8 +59,8 @@ class Specie:
         self.map_height = map_height
         self.role = role
         # Estado inicial (se asegura que food & water no superen sus máximos)
-        self.food  = min(food,  max_food)
-        self.water = min(water, max_water)
+        self.food = max(0.0, min(food, max_food))
+        self.water = max(0.0, min(water, max_water))
         self.alive = True
         self.hp = hp
         self.speed = speed
@@ -66,6 +69,7 @@ class Specie:
         # Posición inicial
         self.x = x
         self.y = y
+        self.attack_cd = 0
 
     def take_damage(self, dmg: float):
         self.hp = max(0.0, self.hp - dmg)
@@ -106,17 +110,3 @@ class Specie:
         self.x = min(max(self.x, half), self.map_width  - half)
         # Restringir Y dentro de los límites del mapa
         self.y = min(max(self.y, half), self.map_height - half)
-
-
-    def walk(self, velocity: float, direction: str) -> None:
-        """
-        Ejecuta un ciclo completo de movimiento: metabolismo + desplazamiento.
-        
-        Args:
-            velocity: Velocidad de movimiento
-            direction: Dirección de movimiento
-        """
-        # Primero: consumir energía por metabolismo
-        self.metabolize()
-        # Segundo: realizar el movimiento y restringir posición
-        self.move(velocity, direction)
