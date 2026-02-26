@@ -1,6 +1,11 @@
 """
 Script para entrenar con visualización en tiempo real en Godot.
-Actualiza el estado en CADA PASO del ecosistema.
+
+Usa los mismos hiperparámetros y configuración que run_training.py,
+añadiendo un servidor HTTP que Godot puede consultar en cada paso
+para visualizar el estado del ecosistema.
+
+Servidor disponible en: http://localhost:5000/state
 """
 import sys
 import os
@@ -8,243 +13,108 @@ import threading
 import time
 import csv
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from ecosystem_simulator.server.api_server import run_server, update_ecosystem_state, serialize_ecosystem_state
-from ecosystem_simulator.utils.visualization import analyze_training_results
-
 import numpy as np
 import ray
-from ray.tune.registry import register_env
-from ray.rllib.algorithms.ppo import PPOConfig
-from ray.rllib.env.wrappers.pettingzoo_env import ParallelPettingZooEnv
-from ray.rllib.policy.policy import PolicySpec
-from ray.rllib.algorithms.callbacks import DefaultCallbacks
-from ray.rllib.env import BaseEnv
-from ray.rllib.evaluation import RolloutWorker
-from ray.rllib.policy import Policy
-from typing import Dict, Optional, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from ray.rllib.evaluation.episode_v2 import EpisodeV2
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# --- Módulos del ecosistema ---
 from ecosystem_simulator.environment.multi_agent_ecosystem import MultiAgentEcosystem
+from ecosystem_simulator.training.trainer import build_config
 from ecosystem_simulator.training.callbacks import PerAgentAndReasonMetrics
+from ecosystem_simulator.server.api_server import (
+    run_server,
+    update_ecosystem_state,
+    serialize_ecosystem_state,
+)
+from ecosystem_simulator.utils.visualization import analyze_training_results
 
 
-class GodotVisualizationCallback(DefaultCallbacks):
+# ─────────────────────────────────────────────
+#  Configuración central (igual que trainer.py)
+# ─────────────────────────────────────────────
+ENV_CFG = {
+    "n_agents": 8,
+    "veg_density": 15,
+    "water_density": 10,
+    "map_width": 800,
+    "map_height": 600,   # igual que trainer.py
+    "max_steps": 350,
+    "n_predators": 2,
+}
+NUM_RUNNERS  = 4
+NUM_ITERS    = 100
+VIS_START_IT = 5   # Iteración a partir de la cual se envía estado a Godot
+
+
+# ─────────────────────────────────────────────
+#  Función de visualización hacia Godot
+# ─────────────────────────────────────────────
+def _run_godot_episode(trainer, env_cfg: dict, iteration: int) -> None:
     """
-    Callback que actualiza Godot en CADA PASO del entrenamiento.
+    Ejecuta un episodio completo usando las políticas entrenadas y
+    envía cada paso al servidor HTTP para que Godot lo visualice.
+
+    Args:
+        trainer: Algoritmo PPO ya entrenado.
+        env_cfg: Configuración del entorno.
+        iteration: Número de iteración actual (para el campo 'episode').
     """
-    
-    def __init__(self):
-        super().__init__()
-        self.step_count = 0
-        self.episode_count = 0
-        self.update_every = 5  # Actualizar cada N pasos (1 = cada paso)
-    
-    def on_episode_step(
-        self,
-        *,
-        worker: RolloutWorker,
-        base_env: BaseEnv,
-        policies: Optional[Dict[str, Policy]] = None,
-        episode = None,  # Sin tipo específico para compatibilidad
-        **kwargs
-    ) -> None:
-        """Se llama en CADA PASO del episodio."""
-        self.step_count += 1
-        
-        # Actualizar solo cada N pasos para reducir carga
-        if self.step_count % self.update_every != 0:
-            return
-        
-        try:
-            # Intentar obtener el entorno de varias formas
-            env = None
-            
-            # Método 1: Desde base_env
-            if base_env is not None:
-                try:
-                    env = base_env.get_sub_environments()[0]
-                except:
-                    pass
-            
-            # Método 2: Desde worker
-            if env is None and worker is not None:
-                try:
-                    env = worker.env
-                except:
-                    pass
-            
-            # Método 3: Desde episode
-            if env is None and episode is not None:
-                try:
-                    env = episode.env
-                except:
-                    pass
-            
-            if env is None:
-                # No hay entorno disponible
-                return
-            
-            # Si está envuelto en ParallelPettingZooEnv, extraer el env real
-            if hasattr(env, 'env'):
-                env = env.env
-            
-            # Verificar que tiene los atributos necesarios
-            if not hasattr(env, 'species') or not hasattr(env, 'map_width'):
-                return
-            
-            # Serializar estado
-            state = serialize_ecosystem_state(
-                env,
-                env.species,
-                episode=self.episode_count,
-                step=self.step_count
-            )
-            
-            # Actualizar servidor para Godot
-            update_ecosystem_state(state)
-            
-        except Exception as e:
-            # No detener el entrenamiento por errores de visualización
-            if self.step_count % 100 == 0:  # Solo mostrar error cada 100 pasos
-                print(f"[Callback] Error actualizando Godot: {e}")
-    
-    def on_episode_start(
-        self,
-        *,
-        worker: RolloutWorker,
-        base_env: BaseEnv,
-        policies: Dict[str, Policy],
-        episode = None,
-        **kwargs
-    ) -> None:
-        """Al inicio de cada episodio."""
-        self.episode_count += 1
-        self.step_count = 0
-        print(f"[Callback] Episodio {self.episode_count} iniciado")
-    
-    def on_episode_end(
-        self,
-        *,
-        worker: RolloutWorker,
-        base_env: BaseEnv,
-        policies: Dict[str, Policy],
-        episode = None,
-        **kwargs
-    ) -> None:
-        """Al final de cada episodio."""
-        print(f"[Callback] Episodio {self.episode_count} terminado (pasos: {self.step_count})")
+    viz_env = MultiAgentEcosystem(**env_cfg)
+    obs, _ = viz_env.reset()
+
+    for viz_step in range(env_cfg["max_steps"]):
+        if not obs:
+            break
+
+        # Calcular acciones con las políticas entrenadas
+        actions = {}
+        for agent_id, agent_obs in obs.items():
+            try:
+                idx    = int(agent_id.split("_")[1])
+                pol_id = "pred" if idx < env_cfg["n_predators"] else "herb"
+                out    = trainer.get_policy(pol_id).compute_single_action(
+                    agent_obs, explore=False
+                )
+                actions[agent_id] = out[0] if isinstance(out, tuple) else out
+            except Exception:
+                actions[agent_id] = viz_env.action_space(agent_id).sample()
+
+        obs, rewards, terminations, truncations, _ = viz_env.step(actions)
+
+        # Serializar y enviar estado a Godot
+        state = serialize_ecosystem_state(
+            viz_env,
+            viz_env.species,
+            episode=iteration,
+            step=viz_step,
+        )
+        update_ecosystem_state(state)
+
+        time.sleep(0.06)  # Pausa para que Godot pueda consumir el estado
+
+        if all(terminations.values()) or all(truncations.values()):
+            break
 
 
-class CombinedCallbacks(PerAgentAndReasonMetrics):
-    """Combina métricas + visualización de Godot."""
-    
-    def __init__(self):
-        super().__init__()
-        self.godot_callback = GodotVisualizationCallback()
-    
-    def on_episode_step(self, *, worker=None, base_env=None, policies=None, episode=None, **kwargs):
-        # Llamar ambos callbacks con argumentos explícitos
-        super().on_episode_step(worker=worker, base_env=base_env, policies=policies, episode=episode, **kwargs)
-        self.godot_callback.on_episode_step(worker=worker, base_env=base_env, policies=policies, episode=episode, **kwargs)
-    
-    def on_episode_start(self, *, worker=None, base_env=None, policies=None, episode=None, **kwargs):
-        super().on_episode_start(worker=worker, base_env=base_env, policies=policies, episode=episode, **kwargs)
-        self.godot_callback.on_episode_start(worker=worker, base_env=base_env, policies=policies, episode=episode, **kwargs)
-    
-    def on_episode_end(self, *, worker=None, base_env=None, policies=None, episode=None, **kwargs):
-        super().on_episode_end(worker=worker, base_env=base_env, policies=policies, episode=episode, **kwargs)
-        self.godot_callback.on_episode_end(worker=worker, base_env=base_env, policies=policies, episode=episode, **kwargs)
-
-
-def train_with_realtime_godot():
-    """Entrenamiento con actualización en tiempo real para Godot."""
-    
+# ─────────────────────────────────────────────
+#  Entrenamiento principal
+# ─────────────────────────────────────────────
+def train_with_godot() -> None:
+    """
+    Loop de entrenamiento PPO con envío de estado a Godot.
+    Idéntico a trainer.main() salvo por la visualización Godot.
+    """
     ray.init(ignore_reinit_error=True)
 
-    # Configuración del entorno
-    ENV_CFG = {
-        "n_agents": 8,
-        "veg_density": 15,
-        "water_density": 10,
-        "map_width": 800,
-        "map_height": 500,
-        "max_steps": 350,
-        "n_predators": 2,
-    }
+    # Construir config reutilizando el módulo de trainer
+    config  = build_config(ENV_CFG, num_runners=NUM_RUNNERS,
+                           callbacks_class=PerAgentAndReasonMetrics)
+    trainer = config.build()
 
-    # Parámetros de entrenamiento
-    NUM_RUNNERS = 4
-    FRAG = ENV_CFG["max_steps"]
-    TOTAL_BATCH = NUM_RUNNERS * FRAG
+    n_agents = ENV_CFG["n_agents"]
 
-    register_env(
-        "multi_eco",
-        lambda cfg: ParallelPettingZooEnv(MultiAgentEcosystem(**cfg))
-    )
-
-    config = (
-        PPOConfig()
-        .environment(env="multi_eco", env_config=ENV_CFG)
-        .callbacks(callbacks_class=CombinedCallbacks)  # Solo métricas # PerAgentAndReasonMetrics
-        .framework("torch")
-        .multi_agent(
-            policies={
-                "pred": PolicySpec(), 
-                "herb": PolicySpec(),
-            },
-            policy_mapping_fn=lambda agent_id, *a, **k: (
-                "pred" if int(agent_id.split("_")[1]) < ENV_CFG["n_predators"] else "herb"
-            ),
-        )
-        #.env_runners(num_env_runners=NUM_RUNNERS, rollout_fragment_length=50, sample_timeout_s=300)
-    )
-
-    config = config.api_stack(
-        enable_rl_module_and_learner=False,
-        enable_env_runner_and_connector_v2=False
-    )
-    config = config.resources(num_gpus=0)
-
-    try:
-        config = config.rollouts(batch_mode="truncate_episodes")
-    except Exception:
-        pass
-
-    config = config.env_runners(
-        num_env_runners=NUM_RUNNERS,
-        rollout_fragment_length=FRAG,
-        sample_timeout_s=300
-    )
-
-    # Hiperparámetros
-    try:
-        config = config.training(
-            train_batch_size=TOTAL_BATCH,
-            minibatch_size=200,
-            num_epochs=2,
-            lr=3e-4,
-            gamma=0.99, lambda_=0.95,
-            clip_param=0.2, vf_clip_param=10.0,
-            grad_clip=0.5, entropy_coeff=0.01
-        )
-    except TypeError:
-        config = config.training(
-            train_batch_size=TOTAL_BATCH,
-            sgd_minibatch_size=200,
-            num_sgd_iter=2,
-            lr=3e-4,
-            gamma=0.99, lambda_=0.95,
-            clip_param=0.2, vf_clip_param=10.0,
-            grad_clip=0.5, entropy_coeff=0.01
-        )
-    
-    # Entrenamiento y monitoreo
     with open("monitor.csv", "w", newline="") as f:
-        n_agents = ENV_CFG["n_agents"]
         writer = csv.writer(f)
         header = (
             ["iter", "r_mean", "l_mean",
@@ -256,143 +126,79 @@ def train_with_realtime_godot():
         )
         writer.writerow(header)
 
-        trainer = config.build()
-
-        for i in range(100): # Número de iteraciones de entrenamiento
+        for i in range(NUM_ITERS):
             result = trainer.train()
 
-            # Extracción de métricas
+            # ── Extraer métricas ──────────────────────────────────────────
             ev = result.get("env_runners", {}) or {}
             cm = (ev.get("custom_metrics", {}) or
                   result.get("custom_metrics", {}) or {})
-            
-            #def m(key):
-            #    return ev.get(key) or (ev.get("custom_metrics", {}) or {}).get(key)
+
             def m(key, default=0.0):
                 return cm.get(f"{key}_mean", default)
 
-            r_mean = ev.get("episode_return_mean")
-            l_mean = ev.get("episode_len_mean")
+            r_mean = ev.get("episode_return_mean", 0.0)
+            l_mean = ev.get("episode_len_mean",    0.0)
 
-            timeout_pct     = m("reason_timeout_pct")
-            starvation_pct  = m("reason_starvation_pct")
-            dehydration_pct = m("reason_dehydration_pct")
-            predation_pct   = m("reason_predation_pct")
-            att_attempt     = m("attacks_attempted")
-            att_hit         = m("attacks_hit")
-            att_rate        = m("attack_hit_rate")
-
-            row = [i, r_mean, l_mean, 
-                   timeout_pct, starvation_pct, 
-                   dehydration_pct, predation_pct, 
-                   att_attempt, att_hit, att_rate]
-
+            row = [
+                i, r_mean, l_mean,
+                m("reason_timeout_pct"),
+                m("reason_starvation_pct"),
+                m("reason_dehydration_pct"),
+                m("reason_predation_pct"),
+                m("attacks_attempted"),
+                m("attacks_hit"),
+                m("attack_hit_rate"),
+            ]
             for a in range(n_agents):
                 row.append(m(f"agent_{a}/episode_return"))
             for a in range(n_agents):
                 row.append(m(f"agent_{a}/episode_len"))
 
             writer.writerow(row)
+            f.flush()  # Asegurar escritura inmediata al disco
 
-            print(f"Iter {i}: ep_return_mean={r_mean:.2f}, ep_len_mean={l_mean:.2f}")
+            print(f"Iter {i:>3}: ep_return_mean={r_mean:.2f}, ep_len_mean={l_mean:.2f}")
 
-            # ACTUALIZAR VISUALIZACIÓN para Godot
-            try:
-                if i < 80: 
-                    continue # Esperar algunas iteraciones antes de visualizar
-                # Crear un entorno separado para visualización
-                viz_env = MultiAgentEcosystem(**ENV_CFG)
-                obs, _ = viz_env.reset()
-                
-                # Ejecutar algunos pasos con el modelo entrenado
-                for viz_step in range(ENV_CFG["max_steps"]):
-                    if not obs: # Por si ya no hay agentes vivos
-                        break
+            # ── Enviar estado a Godot (solo desde VIS_START_IT) ───────────
+            if i >= VIS_START_IT:
+                try:
+                    _run_godot_episode(trainer, ENV_CFG, iteration=i)
+                except Exception as e:
+                    print(f"[Godot] Error en episodio de visualización (iter {i}): {e}")
 
-                    # Obtener acciones usando el modelo entrenado
-                    actions = {}
-                    for agent in viz_env.agents:
-                        if agent in obs:
-                            try:
-                                idx = int(agent.split("_")[1])
-                                pol_id = (
-                                    "pred"
-                                    if idx < ENV_CFG["n_predators"]
-                                    else "herb"
-                                )
-                                out = trainer.get_policy(pol_id).compute_single_action(
-                                    obs[agent],
-                                    explore=False,
-                                )
-                                action = out[0] if isinstance(out, tuple) else out
-                                actions[agent] = action
-                            except:
-                                # Si falla, usar acción aleatoria como fallback
-                                actions[agent] = viz_env.action_space(agent).sample()
-                    
-                    # Ejecutar paso
-                    obs, rewards, terminations, truncations, infos = viz_env.step(actions)
-                    viz_step += 1
-                    
-                    # Calcular métricas
-                    alive_count = sum(1 for terminated in terminations.values() if not terminated)
-                    metrics = {
-                        'mean_reward': np.mean(list(rewards.values())) if rewards else 0,
-                        'total_reward': sum(rewards.values()) if rewards else 0,
-                        'alive_agents': alive_count,
-                        'total_agents': n_agents,
-                        'iteration': i
-                    }
-
-                    # Actualizar estado para Godot
-                    state = serialize_ecosystem_state(
-                        viz_env,
-                        viz_env.species,
-                        episode=i,
-                        step=viz_step
-                    )
-                    update_ecosystem_state(state)
-
-                    time.sleep(0.07) # Pequeña pausa para Godot y que no se ejecute todo de golpe
-                    
-                    # Si el episodio terminó, resetear
-                    if all(terminations.values()) or all(truncations.values()):
-                        break
-                
-            except Exception as e:
-                print(f"[Godot] Error actualizando visualización: {e}")
-
-        print("\n[+] Entrenamiento completado")
+    print("\n[+] Entrenamiento completado")
+    ray.shutdown()
 
 
+# ─────────────────────────────────────────────
+#  Entry-point
+# ─────────────────────────────────────────────
 if __name__ == "__main__":
     print("=" * 70)
-    print(" ENTRENAMIENTO CON VISUALIZACIÓN TIEMPO REAL EN GODOT ")
+    print("  ENTRENAMIENTO CON VISUALIZACIÓN EN TIEMPO REAL → GODOT")
+    print("=" * 70)
+    print("  Servidor: http://localhost:5000/state")
     print("=" * 70)
     print()
-    print("Servidor: http://localhost:5000/state")
-    print()
-    print("=" * 70)
-    print()
-    
-    # Iniciar servidor HTTP en thread separado
-    print("\n[+] Iniciando servidor HTTP...")
+
+    # Servidor HTTP en hilo daemon (se cierra al terminar el proceso)
+    print("[+] Iniciando servidor HTTP...")
     server_thread = threading.Thread(target=run_server, daemon=True)
     server_thread.start()
-    
-    #time.sleep(2)
-    print("[+] Servidor HTTP activo en http://localhost:5000")
+    print("[+] Servidor HTTP activo en http://localhost:5000/state")
+
     print("[+] Iniciando entrenamiento...\n")
-    
+
     try:
-        train_with_realtime_godot()
-        
+        train_with_godot()
+
         print("\n[+] Analizando resultados...")
         analyze_training_results("monitor.csv")
-        
+
     except KeyboardInterrupt:
-        print("\n\n[!] Entrenamiento interrumpido")
+        print("\n\n[!] Entrenamiento interrumpido por el usuario")
     except Exception as e:
-        print(f"\n[ERROR] {e}")
         import traceback
+        print(f"\n[ERROR] {e}")
         traceback.print_exc()

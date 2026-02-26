@@ -12,3 +12,5 @@ GPUtil
 setuptools
 pygame
 pydantic
+flask
+flask_cors
