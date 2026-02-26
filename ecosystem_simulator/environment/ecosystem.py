@@ -331,32 +331,38 @@ class Ecosystem:
                 if self.vegetation["centers"].size
                 else None
             )
+    def try_attack(self, predator, agents, dmg: float = 25.0):
+        if predator.role is not Role.PREDATOR or not predator.alive:
+            return "miss"
 
-    def try_attack(self, predator, agents, dmg: float = 50.0) -> bool:
-        # Filtra presas válidas (herbívoros vivos)
-        preys = [a for a in agents if getattr(a, "alive", True) and getattr(a, "role", None) is Role.HERBIVORE]
+        # Requiere energía para atacar
+        if predator.food < predator.attack_cost:
+            return "miss"
+
+        # Cobra costo por intento (UNA sola vez)
+        predator.food -= predator.attack_cost
+
+        preys = [a for a in agents if a.alive and a.role is Role.HERBIVORE]
         if not preys:
-            return False
+            return "miss"
 
-        # Construye KDTree o usa búsqueda lineal si hay muy pocos
-        if len(preys) >= 2:
-            coords = np.array([(p.x, p.y) for p in preys], dtype=np.float32)
-            tree = KDTree(coords)
-            dist, idx = tree.query((predator.x, predator.y))
-            prey = preys[int(idx)]
-        else:
-            prey = preys[0]
-            dist = hypot(prey.x - predator.x, prey.y - predator.y)
+        # Presa más cercana (sirve igual con 1 presa)
+        prey = min(preys, key=lambda p: (p.x - predator.x)**2 + (p.y - predator.y)**2)
+        dist = hypot(prey.x - predator.x, prey.y - predator.y)
 
-        if dist <= predator.attack_range and prey.alive:
-            prey.take_damage(dmg)
-            predator.food  = min(predator.max_food,  predator.food  + 40.0)
-            predator.water = min(predator.max_water, predator.water + 5.0)
-            predator.food  = max(0.0, predator.food - predator.attack_cost)
-            return True
-        return False
+        if dist > predator.attack_range:
+            return "miss"
+
+        prey.take_damage(dmg)
+
+        if not prey.alive:  # kill
+            predator.food  = min(predator.max_food,  predator.food  + 60.0)
+            predator.water = min(predator.max_water, predator.water + 10.0)
+            return "kill"
+
+        return "hit"
     
-        # === Nuevos: helpers de consumo con clamp ===
+    # === Nuevos: helpers de consumo con clamp ===
     def try_eat_vegetation(self, agent, bite_gain: float = 20.0) -> bool:
         hits = self.collide_resources(agent.pos, agent.AGENT_SIZE, self.vegetation)
         if hits.size == 0:

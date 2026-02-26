@@ -10,11 +10,31 @@ import random
 import numpy as np
 import gymnasium as gym
 from pettingzoo.utils import ParallelEnv
-from typing import Tuple
+from typing import Dict, List
+from gymnasium.spaces import Discrete, Box
 from scipy.spatial import KDTree
-from gymnasium.spaces import Discrete, Box, Dict, MultiBinary
+
 from ..entities.specie import Specie, Role
 from .ecosystem import Ecosystem
+from dataclasses import dataclass, field
+
+
+@dataclass
+class StepContext:
+    prev_agents: List[str]
+    alive: List[str] = field(default_factory=list)
+    obs: Dict[str, np.ndarray] = field(default_factory=dict)
+    rewards: Dict[str, float] = field(default_factory=dict)
+    terminations: Dict[str, bool] = field(default_factory=dict)
+    truncations: Dict[str, bool] = field(default_factory=dict)
+    infos: Dict[str, dict] = field(default_factory=dict)
+    veg_claims: Dict[int, List[str]] = field(default_factory=dict)
+    wat_claims: Dict[int, List[str]] = field(default_factory=dict)
+    step_bonus: Dict[str, float] = field(default_factory=dict)
+    energy_after_move: Dict[str, float] = field(default_factory=dict)
+    removed_v: int = 0
+    removed_w: int = 0
+    episode_trunc: bool = False
 
 # Direcciones posibles para el movimiento
 DIRECTIONS = ["north", "south", "east", "west"]
@@ -24,6 +44,7 @@ ACT_ATTACK = 6
 BASE_STEP = 2.0 
 BASE_COST = 0.50 
 MOVE_EXTRA = 0.05 
+PRED_ATTACK_CD = 2  # pasos de cooldown después de atacar
 class MultiAgentEcosystem(ParallelEnv, Ecosystem):
     """
     Entorno multi-agente que simula un ecosistema con especies que necesitan recursos.
@@ -93,7 +114,8 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         self.possible_agents = list(self.agents)
         # Diccionario para mapeo rápido agente: índice en self.species
         self._agent_idx = {a: i for i, a in enumerate(self.agents)}
-        
+        self._init_veg = veg_density_scaled
+        self._init_wat = water_density_scaled
         self.max_steps = max_steps
         self.gamma     = gamma
         self.action_spaces = {a: Discrete(7) for a in self.agents}
@@ -135,38 +157,51 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         self.success_hold = 25      # Mantenerlo durante 25 pasos seguidos
     
     def _reset_species(self):
-        """
-        Inicializa o reinicia todas las especies (agentes) en el mapa.
+        spawn_xy = self._sample_spawn_positions(
+            self.n_agents, min_dist=80.0, avoid_resources=True
+        )
 
-        Genera posiciones de spawn aleatorias que evitan:
-        - Estar demasiado cerca de otros agentes
-        - Aparecer sobre recursos existentes
-
-        Cada agente comienza con niveles de recursos entre 60% y 80% del máximo.
-        """
-
-        # Generar posiciones de spawn con restricciones espaciales
-        spawn_xy = self._sample_spawn_positions(self.n_agents, min_dist=80.0, avoid_resources=True)
-
-        # Función auxiliar para generar nivel inicial aleatorio entre 60% y 80%
         def init_level(max_val):
             return float(np.random.uniform(0.60, 0.80) * max_val)
 
-        # Crear lista de especies con posiciones y recursos iniciales
         self.species = []
         for i in range(self.n_agents):
             role = Role.PREDATOR if i < self.n_predators else Role.HERBIVORE
-            # puedes ajustar speed/range por rol si quieres
-            speed = 2.0 if role is Role.HERBIVORE else 2.2
-            attack_range = 30.0 if role is Role.PREDATOR else 20.0
+
+            # stats por rol (ejemplo razonable)
+            if role is Role.HERBIVORE:
+                speed = 2.1
+                hp = 100.0
+                attack_range = 0.0
+                attack_cost = 0.0
+                max_food, max_water = 100.0, 100.0
+            else:
+                speed = 3.0           # un poco más rápido que la presa
+                hp = 120.0
+                attack_range = 45.0
+                attack_cost = 0.5
+                max_food, max_water = 100.0, 100.0
+
+            x, y = spawn_xy[i]
+
             s = Specie(
-                food=init_level(100), water=init_level(100),
-                x=spawn_xy[i][0], y=spawn_xy[i][1],
-                map_width=self.map_width, map_height=self.map_height,
-                role=role, speed=speed, attack_range=attack_range,
+                food=init_level(max_food),
+                water=init_level(max_water),
+                x=float(x),
+                y=float(y),
+                max_food=max_food,
+                max_water=max_water,
+                map_width=self.map_width,
+                map_height=self.map_height,
+                role=role,
+                hp=hp,
+                speed=speed,
+                attack_range=attack_range,
+                attack_cost=attack_cost,
             )
+            s.attack_cd = 0  # arranca sin cooldown
             self.species.append(s)
-        
+                    
     def observation_space(self, agent: str) -> gym.Space:
         """
         Retorna el espacio de observación para un agente específico.
@@ -187,7 +222,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             agent: ID del agente (ej. "agent_0")
             
         Returns:
-            gym.Space: Espacio de acción (Discrete con 5 opciones)
+            gym.Space: Espacio de acción (Discrete con 7 opciones)
         """
         return self.action_spaces[agent]
         # Re-crear especies (roles, stats, posiciones)
@@ -320,358 +355,316 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         if sp.role is Role.HERBIVORE:
             mask[ACT_ATTACK] = 0  # ahora ACT_ATTACK = 6, índice válido
         return mask
+    
+    def _resolve_water_claims(self, ctx: StepContext):
+        for idx, claimers in ctx.wat_claims.items():
+            vivos = [a for a in claimers if not ctx.terminations.get(a, False)]
+            if not vivos:
+                continue
 
-    def step(self, actions):
-        """
-        Ejecuta un paso de simulación para todos los agentes.
-        
-        Este es el método principal que procesa las acciones de todos los agentes,
-        actualiza el estado del mundo, calcula recompensas, y determina
-        terminaciones. El flujo es:
-        
-        1. Procesar acciones de agentes (movimiento, metabolismo)
-        2. Detectar colisiones con recursos
-        3. Resolver conflictos (múltiples agentes queriendo el mismo recurso)
-        4. Calcular recompensas basadas en múltiples criterios
-        5. Verificar condiciones de terminación
-        6. Regenerar recursos consumidos
-        7. Actualizar métricas
-        
-        Args:
-            actions: Diccionario {agent_id: action} con acciones de cada agente
-            
-        Returns:
-            tuple: (obs, rewards, terminations, truncations, infos)
-                - obs: Observaciones para cada agente
-                - rewards: Recompensas para cada agente
-                - terminations: Flags de terminación por muerte
-                - truncations: Flags de terminación por timeout
-                - infos: Información adicional por agente
-        """
-        # Inicializar diccionarios de retorno
-        obs, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
-        
-        # Incrementar contador de pasos del episodio
+            winner = min(
+                vivos,
+                key=lambda a: self.species[self._agent_idx[a]].water /
+                            self.species[self._agent_idx[a]].max_water
+            )
+
+            sp_w = self.species[self._agent_idx[winner]]
+            sp_w.water = min(sp_w.water + 10, sp_w.max_water)
+
+            ctx.step_bonus[winner] += 5.0
+
+            if self.consume_water(idx):
+                ctx.removed_w += 1
+
+    def _resolve_veg_claims(self, ctx: StepContext):
+        for idx, claimers in ctx.veg_claims.items():
+            vivos = [
+                a for a in claimers
+                if (not ctx.terminations.get(a, False))
+                and self.species[self._agent_idx[a]].alive
+                and self.species[self._agent_idx[a]].role is Role.HERBIVORE
+            ]
+            if not vivos:
+                continue
+
+            winner = min(
+                vivos,
+                key=lambda a: self.species[self._agent_idx[a]].food /
+                            self.species[self._agent_idx[a]].max_food
+            )
+
+            sp_w = self.species[self._agent_idx[winner]]
+            sp_w.food = min(sp_w.food + 10, sp_w.max_food)
+
+            ctx.step_bonus[winner] += 8.0
+
+            if self.consume_vegetation(idx):
+                ctx.removed_v += 1
+    def _apply_step_bonus(self, ctx: StepContext):
+        for a in ctx.prev_agents:
+            ctx.rewards[a] = float(ctx.rewards.get(a, 0.0) + ctx.step_bonus.get(a, 0.0))
+    def _init_step_context(self) -> StepContext:
         self._step_count += 1
+        prev_agents = list(self.agents)
+        ctx = StepContext(prev_agents=prev_agents)
+        ctx.episode_trunc = (self._step_count >= self.max_steps)
 
-        # Guardar lista de agentes del paso anterior
-        prev_agents   = list(self.agents)
-        alive         = []  # Lista para agentes que sobreviven este paso
-        
-        # Verificar si el episodio alcanzó el máximo de pasos
-        episode_trunc = (self._step_count >= self.max_steps)
+        # Inicializar bonus por defecto
+        ctx.step_bonus = {a: 0.0 for a in prev_agents}
+        return ctx
 
-        # Diccionarios para rastrear reclamos de recursos (múltiples agentes pueden reclamar el mismo)
-        veg_claims, wat_claims = {}, {}  # {idx_recurso: [agente1, agente2, ...]}
-        
-        # Diccionario para bonificaciones por consumir recursos
-        step_bonus = {a: 0.0 for a in prev_agents}
-        
-        # Diccionario para guardar energía después del movimiento (para reward shaping)
-        energy_after_move = {}
 
-        # Procesar agentes en orden aleatorio para evitar sesgos de orden
-        proc_order = random.sample(prev_agents, len(prev_agents))
+    def _process_agents(self, actions: dict, ctx: StepContext):
+        proc_order = sorted(ctx.prev_agents, key=lambda a: 0 if self.species[self._agent_idx[a]].role is Role.PREDATOR else 1)
 
-        # === LOOP PRINCIPAL: Procesar cada agente ===
         for agent in proc_order:
-            # Obtener índice y objeto Specie del agente
-            i  = self._agent_idx[agent]
+            i = self._agent_idx[agent]
             sp = self.species[i]
 
-            # Inicializar variables de este paso para el agente
-            reward = 0.0       # Recompensa acumulada
-            done_term  = False # Terminación por muerte
-            done_trunc = False # Terminación por timeout
-            reason     = ""    # Razón de terminación
+            reward = 0.0
+            done_term = False
+            done_trunc = False
+            reason = ""
 
-            # Solo procesar si el agente tiene una acción
+            # Cooldown tick aquí (más simple que hacerlo al final)
+            if sp.attack_cd > 0:
+                sp.attack_cd -= 1
+
             if agent in actions:
-                # Guardar energía previa para reward shaping
                 prev_energy = sp.total_energy
 
-                # === DETERMINAR NECESIDAD DOMINANTE ===
-                # Calcular déficit de cada recurso (0 = lleno, 1 = vacío)
-                f_def   = 1.0 - (sp.food  / sp.max_food)   # Déficit de comida
-                w_def   = 1.0 - (sp.water / sp.max_water)  # Déficit de agua
-                
-                # Determinar cuál recurso necesita más urgentemente
-                need    = "water" if w_def > f_def else "veg"
-                need_def = max(f_def, w_def)  # Magnitud del déficit máximo
-                
-                # Calcular distancia normalizada al recurso necesitado (antes del movimiento)
-                d_prev  = self._norm_dist_to(sp, need)
-                prey_prev = self._norm_dist_to_prey(sp) 
+                # déficit de recursos
+                f_def = 1.0 - (sp.food / sp.max_food)
+                w_def = 1.0 - (sp.water / sp.max_water)
 
-                # === PROCESAR ACCIÓN DEL AGENTE ===
+                if sp.role is Role.PREDATOR:
+                    # Para depredador: "food" = presa
+                    need = "water" if w_def > f_def else "prey"
+                    d_prev = self._norm_dist_to_prey(sp) if need == "prey" else self._norm_dist_to(sp, "water")
+                else:
+                    need = "water" if w_def > f_def else "veg"
+                    d_prev = self._norm_dist_to(sp, need)
+
+                prey_prev = self._norm_dist_to_prey(sp)
+
                 a = int(actions[agent])
 
-                # === 0..4: movimiento ===
+                # --- movimiento 0..3 ---
                 if 0 <= a <= 3:
                     act_dir_name = DIRECTIONS[a]
                     prev_x, prev_y = sp.x, sp.y
-                    # Todos los movimientos tienen el mismo coste
+
                     sp.metabolize(BASE_COST + MOVE_EXTRA)
                     sp.move(BASE_STEP, act_dir_name)
-                    # Si prácticamente no se movió (choque con pared), penalizar
+
                     moved_dist = abs(sp.x - prev_x) + abs(sp.y - prev_y)
                     if moved_dist < 1e-3:
-                        # Choque contra el borde: movimiento inútil
                         reward -= 0.3
-                    # Recompensa por progreso hacia el recurso necesitado
-                    d_now = self._norm_dist_to(sp, need)
+
+                    # progreso hacia objetivo
+                    d_now = self._norm_dist_to_prey(sp) if need == "prey" else self._norm_dist_to(sp, need)
+
                     reward += 6.0 * (d_prev - d_now)
-                    reward += 1.0 * (1.0 - d_now)
-                    energy_after_move[agent] = sp.total_energy
-                    reward += 0.02 * (energy_after_move[agent] - prev_energy)
+                    if need == "prey":
+                        diag = (self.map_width**2 + self.map_height**2) ** 0.5
+                        in_range = 1.0 if d_now <= (sp.attack_range / diag) else 0.0
+                        reward += 0.5 * in_range   # pequeño bonus por llegar a rango
+                    else:
+                        reward += 1.0 * (1.0 - d_now)
+                    ctx.energy_after_move[agent] = sp.total_energy
+                    reward += 0.02 * (ctx.energy_after_move[agent] - prev_energy)
 
-                    # Reclamos de recursos...
-                    hit = self.collide_resources((sp.x, sp.y),
-                                                Specie.AGENT_SIZE,
-                                                self.water_sources)
+                    # claims de agua
+                    hit = self.collide_resources((sp.x, sp.y), Specie.AGENT_SIZE, self.water_sources)
                     if hit.size:
-                        wat_claims.setdefault(int(hit[0]), []).append(agent)
+                        ctx.wat_claims.setdefault(int(hit[0]), []).append(agent)
 
-                    hit = self.collide_resources((sp.x, sp.y),
-                                                Specie.AGENT_SIZE,
-                                                self.vegetation)
-                    if hit.size:
-                        veg_claims.setdefault(int(hit[0]), []).append(agent)
+                    # claims de vegetación (solo herbívoro)
+                    hit = self.collide_resources((sp.x, sp.y), Specie.AGENT_SIZE, self.vegetation)
+                    if hit.size and sp.role is Role.HERBIVORE:
+                        ctx.veg_claims.setdefault(int(hit[0]), []).append(agent)
 
-                # === 5: comer vegetación explícito ===
+                # --- comer ---
                 elif a == ACT_EAT:
                     sp.metabolize(BASE_COST)
-                    prey_now = self._norm_dist_to_prey(sp)
+
                     if sp.role is Role.PREDATOR:
-                        # El depredador no obtiene beneficio directo de la vegetación,
-                        # pero se recompensa acercarse a la presa
+                        # depredador no come veg: shaping hacia presa
+                        prey_now = self._norm_dist_to_prey(sp)
                         reward += 1.0 * (prey_prev - prey_now)
                     else:
                         ate = self.try_eat_vegetation(sp, bite_gain=20.0)
                         reward += 1.0 if ate else -0.1
 
-                # === 6: beber agua explícito ===
+                # --- beber ---
                 elif a == ACT_DRINK:
                     sp.metabolize(BASE_COST)
                     drank = self.try_drink(sp, sip_gain=15.0)
-                    if drank:
-                        reward += 0.5
-                    else:
-                        # Intentó beber sin estar sobre agua
-                        reward -= 0.1
+                    reward += 0.5 if drank else -0.1
 
-                # === 7: atacar (solo depredador) ===
+                # --- atacar ---
                 elif a == ACT_ATTACK:
                     sp.metabolize(BASE_COST)
+
                     if sp.role is Role.PREDATOR:
-                        hit = self.try_attack(sp, self.species, dmg=50.0)
-                        reward += 3.0 if hit else -0.1
-                        # Métricas por paso (para callbacks)
-                        infos.setdefault(agent, {})
-                        infos[agent]["attack_attempt"] = 1
-                        infos[agent]["attack_hit"] = 1 if hit else 0
+                        if sp.attack_cd > 0:
+                            reward -= 0.05
+                            outcome = "cooldown"
+                        else:
+                            outcome = self.try_attack(sp, self.species, dmg=50.0)
+
+                            # Recompensas por ataque (esto NO lo habías puesto en el refactor)
+                            if outcome == "miss":
+                                reward -= 0.1
+                            elif outcome == "hit":
+                                reward += 10.0
+                                sp.attack_cd = PRED_ATTACK_CD
+                            elif outcome == "kill":
+                                reward += 25.0
+                                sp.food = min(sp.max_food, sp.food + 60.0)  # <- clave
+                                sp.attack_cd = PRED_ATTACK_CD
+
+                        ctx.infos.setdefault(agent, {})
+                        ctx.infos[agent]["attack_hit"] = 1 if outcome in ("hit", "kill") else 0
+                        ctx.infos[agent]["attack_kill"] = 1 if outcome == "kill" else 0
                     else:
-                        # Herbívoro intentando atacar: pequeña penalización
                         reward -= 0.1
 
-                # === VERIFICAR CONDICIONES DE MUERTE POR RECURSOS ===
+                # muerte por recursos
                 if (sp.food <= 0) or (sp.water <= 0):
-                    # El agente murió por inanición o deshidratación
-                    reward   -= 10.0  # Penalización fuerte por morir
+                    reward -= 10.0
                     done_term = True
-                    reason    = "starvation" if sp.food <= 0 else "dehydration"
-                    sp.alive  = False
+                    reason = "starvation" if sp.food <= 0 else "dehydration"
+                    sp.alive = False
 
-
-                # === BONIFICACIÓN POR HOMEOSTASIS (mantener recursos altos) ===
+                # homeostasis
                 if not done_term:
-                    # Solo si el agente sigue vivo
                     if sp.food >= self.success_thr * sp.max_food and sp.water >= self.success_thr * sp.max_water:
-                        # El agente mantiene ambos recursos por encima del 90%
                         self._satiated[agent] += 1
                         if self._satiated[agent] >= self.success_hold:
-                            # Ha mantenido niveles altos por 25 pasos consecutivos
-                            reward += 30.0  # Gran bonificación por supervivencia exitosa
-                            # Resetear contador para que pueda ganar el bonus nuevamente
+                            reward += 15.0
                             self._satiated[agent] = 0
                     else:
-                        # Si no cumple la condición, resetear el contador
                         self._satiated[agent] = 0
 
-                # === VERIFICAR TRUNCATION POR TIMEOUT ===
-                if (not done_term) and episode_trunc:
+                # truncation por timeout
+                if (not done_term) and ctx.episode_trunc:
                     done_trunc = True
                     reason = "timeout"
 
-            # === RECOMPENSAS ADICIONALES BASADAS EN ESTADO DE SALUD ===
+            # recompensas extra por “salud”
             if not done_term:
-                # Solo aplicar estas recompensas si el agente sigue vivo
-                # Normalizar niveles de recursos a rango [0, 1]
                 f_norm = sp.food / sp.max_food
                 w_norm = sp.water / sp.max_water
-                min_norm = min(f_norm, w_norm)  # Recurso más crítico
-                
-                # Recompensa pequeña por mantener recursos
+                min_norm = min(f_norm, w_norm)
+
                 reward += 0.02 * min_norm
-                
-                # Penalizaciones crecientes por niveles críticos
-                if min_norm < 0.15: reward -= 0.5   # Nivel crítico
-                if min_norm < 0.08: reward -= 1.0   # Nivel muy crítico
-                # === PENALIZACIÓN POR PEGARSE A LAS PAREDES ===
-                # Distancia normalizada a cada borde (0 = en el borde, ~0.5 centro)
+                if min_norm < 0.15:
+                    reward -= 0.5
+                if min_norm < 0.08:
+                    reward -= 1.0
+
+                # penalización por bordes
                 dist_left   = sp.x / self.map_width
-                dist_right  = (self.map_width  - sp.x) / self.map_width
+                dist_right  = (self.map_width - sp.x) / self.map_width
                 dist_top    = sp.y / self.map_height
                 dist_bottom = (self.map_height - sp.y) / self.map_height
-
                 dist_to_edge = min(dist_left, dist_right, dist_top, dist_bottom)
 
-                edge_margin = 0.15  # 15% del mapa
+                edge_margin = 0.15
                 if dist_to_edge < edge_margin:
-                    # Penalización lineal: máximo -0.5 pegado al borde
                     reward -= 0.5 * (edge_margin - dist_to_edge) / edge_margin
 
-            # === GUARDAR RESULTADOS DEL AGENTE ===
-            rewards[agent]      = float(reward)
-            terminations[agent] = done_term
-            truncations[agent]  = done_trunc
-            # Etiqueta el rol para que el callback pueda agregar métricas por rol
+            # guardar outputs por agente
+            ctx.rewards[agent] = float(reward)
+            ctx.terminations[agent] = done_term
+            ctx.truncations[agent] = done_trunc
+
             role_str = "PREDATOR" if sp.role is Role.PREDATOR else "HERBIVORE"
             base_info = {
                 "reason": reason,
                 "role": role_str,
                 "action_mask": self._action_mask(sp),
             }
-            infos[agent] = {**infos.get(agent, {}), **base_info}
-            # Mantén lo que ya estaba (attack_*), y actualiza reason/role/action_mask
+            ctx.infos[agent] = {**ctx.infos.get(agent, {}), **base_info}
 
-            # Agregar a la lista de vivos si no terminó ni se truncó
             if (not done_term) and (not done_trunc):
-                alive.append(agent)
+                ctx.alive.append(agent)
 
-        # === RESOLVER CONFLICTOS POR RECURSOS DE AGUA ===
-        # Cuando múltiples agentes reclaman el mismo recurso, gana el más necesitado
-        removed_w = 0  # Contador de recursos de agua agotados
-        for idx, claimers in wat_claims.items():
-            # Filtrar solo los agentes que siguen vivos
-            vivos = [a for a in claimers if not terminations.get(a, False)]
-            if not vivos:
-                continue  # Si nadie vivo reclama, pasar al siguiente
-            
-            # El ganador es el agente con menor ratio agua/max_agua (más sediento)
-            winner = min(vivos, key=lambda a: self.species[self._agent_idx[a]].water /
-                                        self.species[self._agent_idx[a]].max_water)
-            
-            # El ganador obtiene agua
-            sp_w = self.species[self._agent_idx[winner]]
-            sp_w.water = min(sp_w.water + 10, sp_w.max_water)  # +10 agua, sin exceder máximo
-            
-            # Bonificación por conseguir recurso
-            step_bonus[winner] += 5.0
-            
-            # Consumir el recurso y verificar si se agotó
-            if self.consume_water(idx):
-                removed_w += 1
 
-        # === RESOLVER CONFLICTOS POR RECURSOS DE VEGETACIÓN ===
-        removed_v = 0  # Contador de recursos de vegetación agotados
-        for idx, claimers in veg_claims.items():
-            # Filtrar solo los agentes que siguen vivos
-            vivos = [a for a in claimers if not terminations.get(a, False)]
-            if not vivos:
-                continue
-            
-            # El ganador es el agente con menor ratio comida/max_comida (más hambriento)
-            winner = min(vivos, key=lambda a: self.species[self._agent_idx[a]].food /
-                                        self.species[self._agent_idx[a]].max_food)
-            
-            # El ganador obtiene comida
-            sp_w = self.species[self._agent_idx[winner]]
-            sp_w.food = min(sp_w.food + 10, sp_w.max_food)  # +10 comida, sin exceder máximo
-            
-            # Bonificación por conseguir recurso (más que agua por ser más escaso)
-            step_bonus[winner] += 8.0
-            
-            # Consumir el recurso y verificar si se agotó
-            if self.consume_vegetation(idx):
-                removed_v += 1
-
-        # === APLICAR BONIFICACIONES POR CONSUMO DE RECURSOS ===
-        for a in prev_agents:
-            rewards[a] = float(rewards.get(a, 0.0) + step_bonus.get(a, 0.0))
-        
-        # === REWARD SHAPING ADICIONAL: Cambio de energía tras consumo ===
-        # Aplicar reward shaping por cambio de energía después de consumir recursos
-        for a in prev_agents:
-            if (a in energy_after_move) and (not terminations.get(a, False)):
-                # Comparar energía actual con energía después del movimiento
+    def _apply_post_move_energy_shaping(self, ctx: StepContext):
+        for a in ctx.prev_agents:
+            if (a in ctx.energy_after_move) and (not ctx.terminations.get(a, False)):
                 post = self.species[self._agent_idx[a]].total_energy
-                # Aumentar la recompensa de ESE agente en función del cambio de energía
-                rewards[a] = float(
-                    rewards.get(a, 0.0) + 0.02 * (post - energy_after_move[a])
-                )
-                
-        # === REPONER RECURSOS CONSUMIDOS ===
-        # Solo si el episodio no terminó por timeout global
-        if not episode_trunc:
-            # Calcular cuántos recursos generar para mantener densidades objetivo
-            target_veg = self._init_veg  # Densidad objetivo de vegetación
-            target_wat = self._init_wat  # Densidad objetivo de agua
-            
-            # Contar recursos actuales
-            cur_veg = self.vegetation["x"].shape[0]
-            cur_wat = self.water_sources["x"].shape[0]
-            
-            # Calcular cuántos generar (mitad de los removidos, sin exceder objetivo)
-            spawn_veg = max(0, min(max(1, removed_v // 2), target_veg - cur_veg))
-            spawn_wat = max(0, min(max(1, removed_w // 2), target_wat - cur_wat))
-            if spawn_veg: self.spawn_vegetation(n=spawn_veg)
-            if spawn_wat: self.spawn_water(n=spawn_wat)
+                ctx.rewards[a] = float(ctx.rewards.get(a, 0.0) + 0.02 * (post - ctx.energy_after_move[a]))
 
-        self._prune_depleted_resources()
 
-        # === NUEVO: terminar por depredación (agentes que ahora están muertos) ===
-        for agent in prev_agents:
+    def _respawn_resources_if_needed(self, ctx: StepContext):
+        if ctx.episode_trunc:
+            return
+
+        target_veg = self._init_veg
+        target_wat = self._init_wat
+
+        cur_veg = self.vegetation["x"].shape[0]
+        cur_wat = self.water_sources["x"].shape[0]
+
+        spawn_veg = max(0, min(max(1, ctx.removed_v // 2), target_veg - cur_veg))
+        spawn_wat = max(0, min(max(1, ctx.removed_w // 2), target_wat - cur_wat))
+
+        if spawn_veg:
+            self.spawn_vegetation(n=spawn_veg)
+        if spawn_wat:
+            self.spawn_water(n=spawn_wat)
+
+
+    def _finalize_predation_and_cooldowns(self, ctx: StepContext):
+        # marcar terminación por depredación (presas que quedaron hp<=0)
+        for agent in ctx.prev_agents:
             i = self._agent_idx[agent]
             sp = self.species[i]
-            if (not terminations.get(agent, False)) and sp.alive is False:
-                terminations[agent] = True
-                truncations[agent]  = False
-                infos[agent] = {**infos.get(agent, {}), "reason": "predation"}
-                if agent in alive:
-                    alive.remove(agent)
+
+            if (not ctx.terminations.get(agent, False)) and (sp.alive is False):
+                ctx.terminations[agent] = True
+                ctx.truncations[agent] = False
+                ctx.infos[agent] = {**ctx.infos.get(agent, {}), "reason": "predation"}
+                if agent in ctx.alive:
+                    ctx.alive.remove(agent)
 
 
+    def _build_obs_and_episode_metrics(self, ctx: StepContext):
+        for agent in ctx.prev_agents:
+            ctx.obs[agent] = self._get_obs(self.species[self._agent_idx[agent]])
 
-        # Observaciones y métricas
-        for agent in prev_agents:
-            # Generar observación actualizada para cada agente
-            obs[agent] = self._get_obs(self.species[self._agent_idx[agent]])
-            
-            # Asegurar que infos existe para este agente
-            infos.setdefault(agent, {})
-            
-            # Actualizar métricas acumuladas del episodio
-            self._ep_return[agent] = self._ep_return.get(agent, 0.0) + rewards.get(agent, 0.0)
-            self._ep_len[agent]    = self._ep_len.get(agent, 0) + 1
-            
-            # Agregar métricas a infos para callbacks de RLlib
-            infos[agent].setdefault("ep_return", self._ep_return[agent])
-            infos[agent].setdefault("ep_len",    self._ep_len[agent])
+            ctx.infos.setdefault(agent, {})
+            self._ep_return[agent] = self._ep_return.get(agent, 0.0) + ctx.rewards.get(agent, 0.0)
+            self._ep_len[agent] = self._ep_len.get(agent, 0) + 1
 
-        # === TERMINACIÓN GLOBAL POR TIMEOUT ===
-        # Si el episodio alcanzó el máximo de pasos, truncar todos los agentes vivos
-        if episode_trunc and len(alive) > 0:
-            for a in list(alive):
-                truncations[a] = True
-                infos[a]["reason"] = "timeout"
-            alive = []  # Ningún agente queda vivo tras el timeout
+            ctx.infos[agent].setdefault("ep_return", self._ep_return[agent])
+            ctx.infos[agent].setdefault("ep_len", self._ep_len[agent])
 
-        # Actualizar lista de agentes activos para el próximo paso
-        self.agents = alive
-        
-        return obs, rewards, terminations, truncations, infos
 
+    def _apply_timeout_if_needed(self, ctx: StepContext):
+        if ctx.episode_trunc and len(ctx.alive) > 0:
+            for a in list(ctx.alive):
+                ctx.truncations[a] = True
+                ctx.infos[a]["reason"] = "timeout"
+            ctx.alive = []
+    def step(self, actions):
+        ctx = self._init_step_context()
+        self._process_agents(actions, ctx)
+        self._resolve_water_claims(ctx)
+        self._resolve_veg_claims(ctx)
+        self._apply_step_bonus(ctx)
+        self._apply_post_move_energy_shaping(ctx)
+        self._respawn_resources_if_needed(ctx)
+        self._prune_depleted_resources()
+        self._finalize_predation_and_cooldowns(ctx)
+        self._build_obs_and_episode_metrics(ctx)
+        self._apply_timeout_if_needed(ctx)
+        self.agents = ctx.alive
+        return ctx.obs, ctx.rewards, ctx.terminations, ctx.truncations, ctx.infos
+    
     def _get_obs(self, sp: Specie) -> np.ndarray:
         """
         Construye la observación para un agente específico.

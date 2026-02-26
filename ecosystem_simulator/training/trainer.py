@@ -1,6 +1,7 @@
 """
 Módulo principal para el entrenamiento del modelo RL.
 """
+from email.policy import default
 import os
 os.environ.pop("AIR_VERBOSITY", None)
 import logging
@@ -16,8 +17,8 @@ from ray.rllib.policy.policy import PolicySpec
 from ..environment.multi_agent_ecosystem import MultiAgentEcosystem
 from .callbacks import PerAgentAndReasonMetrics
 
-NUM_ITERS       = 350         
-VIS_START_FRAC  = 0.5         # empezar al 50% del entrenamiento
+NUM_ITERS       = 500         
+VIS_START_FRAC  = 0.7         # empezar al 50% del entrenamiento
 VIS_INTERVAL    = 10  
 
 # Para importar el visualizer
@@ -136,9 +137,10 @@ def main(enable_visualization: bool = False):
         writer = csv.writer(f)
         header = (
             ["iter", "r_mean", "l_mean",
-             "reason_timeout_pct", "reason_starvation_pct",
-             "reason_dehydration_pct", "reason_predation_pct",
-             "attacks_attempted", "attacks_hit", "attack_hit_rate"]
+            "reason_timeout_pct", "reason_starvation_pct",
+            "reason_dehydration_pct", "reason_predation_pct",
+            "attacks_attempted", "attacks_hit", "attacks_kill",
+            "attack_hit_rate", "attack_kill_rate"]
             + [f"r_agent_{i}" for i in range(n_agents)]
             + [f"l_agent_{i}" for i in range(n_agents)]
         )
@@ -151,7 +153,7 @@ def main(enable_visualization: bool = False):
                   result.get("custom_metrics", {}) or {})
 
             def m(key, default=0.0):
-                return cm.get(f"{key}_mean", default)
+                return cm.get(f"{key}_mean", cm.get(key, default))
 
             r_mean = ev.get("episode_return_mean")
             l_mean = ev.get("episode_len_mean")
@@ -160,14 +162,17 @@ def main(enable_visualization: bool = False):
             starvation_pct  = m("reason_starvation_pct")
             dehydration_pct = m("reason_dehydration_pct")
             predation_pct   = m("reason_predation_pct")
-            att_attempt     = m("attacks_attempted")
-            att_hit         = m("attacks_hit")
-            att_rate        = m("attack_hit_rate")
+            att_attempt = m("attacks_attempted")
+            att_hit     = m("attacks_hit")
+            att_kill    = m("attacks_kill")
+            att_rate    = m("attack_hit_rate")
+            kill_rate   = m("attack_kill_rate")
 
             row = [i, r_mean, l_mean,
-                   timeout_pct, starvation_pct,
-                   dehydration_pct, predation_pct,
-                   att_attempt, att_hit, att_rate]
+                timeout_pct, starvation_pct,
+                dehydration_pct, predation_pct,
+                att_attempt, att_hit, att_kill,
+                att_rate, kill_rate]
 
             for a in range(n_agents):
                 row.append(m(f"agent_{a}/episode_return"))

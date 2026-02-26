@@ -56,6 +56,14 @@ def analyze_training_results(csv_path="monitor.csv"):
     "reason_predation_pct",
         ]
         has_reasons = all(col in df.columns for col in reason_cols)
+        attack_cols = [
+            "attacks_attempted",
+            "attacks_hit",
+            "attacks_kill",
+            "attack_hit_rate",
+            "attack_kill_rate",
+        ]
+        has_attacks = all(c in df.columns for c in attack_cols)
         
         # Detectar columnas por agente (retorno)
         r_agent_cols = sorted([c for c in df.columns if c.startswith("r_agent_")],
@@ -77,8 +85,11 @@ def analyze_training_results(csv_path="monitor.csv"):
         cumavg_l = l_mean.expanding().mean()
 
         # === GENERAR VISUALIZACIONES ===
-        _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_l, 
-                     r_agent_cols, l_agent_cols, df, SMOOTH_WINDOW, reason_cols, has_reasons)
+        _create_plots(
+            iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_l,
+            r_agent_cols, l_agent_cols, df, SMOOTH_WINDOW, reason_cols, has_reasons,
+            attack_cols, has_attacks
+        )
 
         # === IMPRIMIR RESUMEN ESTADÍSTICO ===
         print("\nResumen:")
@@ -93,7 +104,7 @@ def analyze_training_results(csv_path="monitor.csv"):
         print("Error en análisis:", repr(e))
 
 def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_l,
-                 r_agent_cols, l_agent_cols, df, SMOOTH_WINDOW, reason_cols, has_reasons):
+                 r_agent_cols, l_agent_cols, df, SMOOTH_WINDOW, reason_cols, has_reasons, attack_cols, has_attacks):
     """
     Crea todas las visualizaciones de los resultados del entrenamiento.
     
@@ -196,6 +207,34 @@ def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_
         plt.title("Razones de terminación de episodios")
         plt.xlabel("Iteración")
         plt.ylabel("Porcentaje")
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+     # === FIGURA 5: MÉTRICAS DE ATAQUE ===
+    if has_attacks:
+        plt.figure(figsize=(12, 5))
+
+        # Suavizar counts (attempt/hit/kill)
+        for c in ["attacks_attempted", "attacks_hit", "attacks_kill"]:
+            serie = df[c].rolling(SMOOTH_WINDOW, min_periods=1).mean()
+            plt.plot(iters, serie, label=c)
+
+        plt.title("Ataques (conteos por iteración - media móvil)")
+        plt.xlabel("Iteración")
+        plt.ylabel("Conteo")
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+
+        plt.figure(figsize=(12, 4))
+        for c in ["attack_hit_rate", "attack_kill_rate"]:
+            serie = df[c].rolling(SMOOTH_WINDOW, min_periods=1).mean()
+            plt.plot(iters, serie, label=c)
+
+        plt.title("Tasas de ataque (media móvil)")
+        plt.xlabel("Iteración")
+        plt.ylabel("Rate")
+        plt.ylim(0, 1)
         plt.legend()
         plt.tight_layout()
         plt.show()
