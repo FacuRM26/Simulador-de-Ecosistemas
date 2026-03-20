@@ -5,57 +5,60 @@ Proporciona funciones para analizar y graficar las métricas de entrenamiento
 guardadas en archivos CSV, incluyendo:
 - Recompensas y longitudes de episodios
 - Métricas por agente individual
-- Razones de terminación
+- Métricas por rol (herbívoros / depredadores)
+- Razones de terminación por rol
+- Métricas de ataque
 - Promedios móviles y acumulados
 """
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import re
+
 N_PREDATORS = 2
-def analyze_training_results(csv_path="monitor.csv"):
+
+from pathlib import Path
+
+def analyze_training_results(csv_path=None):
     """
     Analiza y visualiza los resultados del entrenamiento desde un archivo CSV.
-    
-    Lee el archivo CSV de monitoreo, procesa las métricas y genera múltiples
-    gráficos para analizar el progreso del entrenamiento:
-    
-    1. Métricas agregadas (recompensa y longitud media)
-    2. Retorno por agente individual
-    3. Longitud por agente individual  
-    4. Razones de terminación
-    
-    También imprime un resumen estadístico en consola.
-    
-    Args:
-        csv_path: Ruta al archivo CSV de monitoreo (por defecto "monitor.csv")
     """
     try:
-        # Leer archivo CSV
+        if csv_path is None:
+            csv_path = Path(__file__).resolve().parents[2] / "monitor.csv"
+        else:
+            csv_path = Path(csv_path).resolve()
+        print("Leyendo monitor desde:", csv_path)
         df = pd.read_csv(csv_path)
 
-        # Convertir todas las columnas numéricas (excepto 'iter')
+        # Convertir columnas numéricas
         for c in df.columns:
             if c != "iter":
                 df[c] = pd.to_numeric(df[c], errors="coerce")
 
-        # Verificar que el CSV tenga las columnas esenciales
         if not {"r_mean", "l_mean"}.issubset(df.columns):
             raise KeyError("El CSV no tiene r_mean/l_mean.")
 
-        # Extraer columnas principales
         iters = df["iter"].values if "iter" in df.columns else np.arange(len(df))
-        r_mean = df["r_mean"]  # Recompensa media
-        l_mean = df["l_mean"]  # Longitud media
+        r_mean = df["r_mean"]
+        l_mean = df["l_mean"]
 
-        # Detección de columnas de razones
-        reason_cols = [
-    "reason_timeout_pct",
-    "reason_starvation_pct",
-    "reason_dehydration_pct",
-    "reason_predation_pct",
+        # Columnas por rol
+        herb_reason_cols = [
+            "herbivore_reason_timeout_pct",
+            "herbivore_reason_starvation_pct",
+            "herbivore_reason_dehydration_pct",
+            "herbivore_reason_predation_pct",
         ]
-        has_reasons = all(col in df.columns for col in reason_cols)
+        pred_reason_cols = [
+            "predator_reason_timeout_pct",
+            "predator_reason_starvation_pct",
+            "predator_reason_dehydration_pct",
+            "predator_reason_predation_pct",
+        ]
+        has_herb_reasons = all(col in df.columns for col in herb_reason_cols)
+        has_pred_reasons = all(col in df.columns for col in pred_reason_cols)
+
         attack_cols = [
             "attacks_attempted",
             "attacks_hit",
@@ -64,96 +67,138 @@ def analyze_training_results(csv_path="monitor.csv"):
             "attack_kill_rate",
         ]
         has_attacks = all(c in df.columns for c in attack_cols)
-        
-        # Detectar columnas por agente (retorno)
-        r_agent_cols = sorted([c for c in df.columns if c.startswith("r_agent_")],
-                            key=lambda x: int(re.search(r"(\d+)$", x).group(1)))
-        # Detectar columnas por agente (longitud)
-        l_agent_cols = sorted([c for c in df.columns if c.startswith("l_agent_")],
-                            key=lambda x: int(re.search(r"(\d+)$", x).group(1)))
 
-        # === CALCULAR SUAVIZADOS ===
-        # Ventana de suavizado dinámica: entre 5 y 20, o 1/3 de los datos
-        SMOOTH_WINDOW = max(5, min(20, max(1, len(df)//3)))
-        
-        # Media móvil (suaviza oscilaciones)
-        mov_avg_r = r_mean.rolling(SMOOTH_WINDOW, min_periods=1).mean()
-        mov_avg_l = l_mean.rolling(SMOOTH_WINDOW, min_periods=1).mean()
-        
-        # Media acumulativa (tendencia general)
-        cumavg_r = r_mean.expanding().mean()
-        cumavg_l = l_mean.expanding().mean()
+        role_cols = [
+            "herbivore_episode_return",
+            "predator_episode_return",
+            "herbivore_episode_len",
+            "predator_episode_len",
+            "herbivore_survival_pct",
+            "predator_survival_pct",
+            "herbivore_avg_food",
+            "herbivore_avg_water",
+            "predator_avg_food",
+            "predator_avg_water",
+            "herbivore_critical_ratio",
+            "predator_critical_ratio",
+        ]
+        has_role_metrics = any(c in df.columns for c in role_cols)
 
-        # === GENERAR VISUALIZACIONES ===
-        _create_plots(
-            iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_l,
-            r_agent_cols, l_agent_cols, df, SMOOTH_WINDOW, reason_cols, has_reasons,
-            attack_cols, has_attacks
+        # Detectar columnas por agente
+        r_agent_cols = sorted(
+            [c for c in df.columns if c.startswith("r_agent_")],
+            key=lambda x: int(re.search(r"(\d+)$", x).group(1))
+        )
+        l_agent_cols = sorted(
+            [c for c in df.columns if c.startswith("l_agent_")],
+            key=lambda x: int(re.search(r"(\d+)$", x).group(1))
         )
 
-        # === IMPRIMIR RESUMEN ESTADÍSTICO ===
+        # Suavizado
+        SMOOTH_WINDOW = max(5, min(20, max(1, len(df) // 3)))
+        mov_avg_r = r_mean.rolling(SMOOTH_WINDOW, min_periods=1).mean()
+        mov_avg_l = l_mean.rolling(SMOOTH_WINDOW, min_periods=1).mean()
+        cumavg_r = r_mean.expanding().mean()
+        cumavg_l = l_mean.expanding().mean()
+        print("\nColumnas del CSV:")
+        print(df.columns.tolist())
+
+        print("\nFlags detectados:")
+        print("has_role_metrics =", has_role_metrics)
+        print("has_herb_reasons =", has_herb_reasons)
+        print("has_pred_reasons =", has_pred_reasons)
+        print("has_attacks =", has_attacks)
+        _create_plots(
+            iters=iters,
+            r_mean=r_mean,
+            l_mean=l_mean,
+            mov_avg_r=mov_avg_r,
+            mov_avg_l=mov_avg_l,
+            cumavg_r=cumavg_r,
+            cumavg_l=cumavg_l,
+            r_agent_cols=r_agent_cols,
+            l_agent_cols=l_agent_cols,
+            df=df,
+            smooth_window=SMOOTH_WINDOW,
+            herb_reason_cols=herb_reason_cols,
+            pred_reason_cols=pred_reason_cols,
+            has_herb_reasons=has_herb_reasons,
+            has_pred_reasons=has_pred_reasons,
+            attack_cols=attack_cols,
+            has_attacks=has_attacks,
+            has_role_metrics=has_role_metrics,
+        )
+
         print("\nResumen:")
-        print(f"r_mean: mean={np.nanmean(r_mean):.3f}, std={np.nanstd(r_mean):.3f}, "
-              f"median={np.nanmedian(r_mean):.3f}")
-        print(f"l_mean: mean={np.nanmean(l_mean):.3f}, std={np.nanstd(l_mean):.3f}, "
-              f"median={np.nanmedian(l_mean):.3f}")
+        print(f"r_mean: mean={np.nanmean(r_mean):.3f}, std={np.nanstd(r_mean):.3f}, median={np.nanmedian(r_mean):.3f}")
+        print(f"l_mean: mean={np.nanmean(l_mean):.3f}, std={np.nanstd(l_mean):.3f}, median={np.nanmedian(l_mean):.3f}")
+
+        if "herbivore_survival_pct" in df.columns:
+            print(f"Herbivore survival pct (último): {df['herbivore_survival_pct'].iloc[-1]:.2f}")
+        if "predator_survival_pct" in df.columns:
+            print(f"Predator survival pct (último): {df['predator_survival_pct'].iloc[-1]:.2f}")
+        if "attack_hit_rate" in df.columns:
+            print(f"Attack hit rate (último): {df['attack_hit_rate'].iloc[-1]:.3f}")
+        if "attack_kill_rate" in df.columns:
+            print(f"Attack kill rate (último): {df['attack_kill_rate'].iloc[-1]:.3f}")
 
     except FileNotFoundError:
         print(f"No se encontró el archivo '{csv_path}'. Genera antes el CSV de monitorización.")
     except Exception as e:
         print("Error en análisis:", repr(e))
 
-def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_l,
-                 r_agent_cols, l_agent_cols, df, SMOOTH_WINDOW, reason_cols, has_reasons, attack_cols, has_attacks):
+
+def _create_plots(
+    iters,
+    r_mean,
+    l_mean,
+    mov_avg_r,
+    mov_avg_l,
+    cumavg_r,
+    cumavg_l,
+    r_agent_cols,
+    l_agent_cols,
+    df,
+    smooth_window,
+    herb_reason_cols,
+    pred_reason_cols,
+    has_herb_reasons,
+    has_pred_reasons,
+    attack_cols,
+    has_attacks,
+    has_role_metrics,
+):
     """
-    Crea todas las visualizaciones de los resultados del entrenamiento.
-    
-    Genera 4 tipos de figuras:
-    1. Métricas agregadas: recompensa y longitud con suavizados
-    2. Retorno por agente individual
-    3. Longitud por agente individual
-    4. Porcentajes de razones de terminación
-    
-    Args:
-        iters: Array de iteraciones
-        r_mean, l_mean: Series de recompensa y longitud media
-        mov_avg_r, mov_avg_l: Medias móviles
-        cumavg_r, cumavg_l: Medias acumuladas
-        r_agent_cols, l_agent_cols: Listas de nombres de columnas por agente
-        df: DataFrame con todos los datos
-        SMOOTH_WINDOW: Tamaño de ventana para suavizado
-        reason_cols: Lista de nombres de columnas de razones
-        has_reasons: Flag indicando si hay datos de razones
+    Crea todas las visualizaciones.
     """
-    # === FIGURA 1: MÉTRICAS AGREGADAS ===
+
+    # =========================
+    # FIGURA 1: MÉTRICAS AGREGADAS
+    # =========================
     plt.figure(figsize=(12, 8))
 
-    # Subplot 1: Recompensa media
     plt.subplot(2, 2, 1)
-    plt.plot(iters, r_mean, alpha=0.3, label="r_mean (raw)")  # Datos crudos translúcidos
-    plt.plot(iters, mov_avg_r, label=f"r_mean mov.avg (w={SMOOTH_WINDOW})")  # Media móvil
+    plt.plot(iters, r_mean, alpha=0.3, label="r_mean (raw)")
+    plt.plot(iters, mov_avg_r, label=f"r_mean mov.avg (w={smooth_window})")
     plt.title("Recompensa media por iteración")
     plt.xlabel("Iteración")
     plt.ylabel("Return")
     plt.legend()
 
-    # Subplot 2: Longitud media
     plt.subplot(2, 2, 3)
     plt.plot(iters, l_mean, alpha=0.3, label="l_mean (raw)")
-    plt.plot(iters, mov_avg_l, label=f"l_mean mov.avg (w={SMOOTH_WINDOW})")
+    plt.plot(iters, mov_avg_l, label=f"l_mean mov.avg (w={smooth_window})")
     plt.title("Longitud media por iteración")
     plt.xlabel("Iteración")
     plt.ylabel("Timesteps")
     plt.legend()
 
-    # Subplot 3: Retorno acumulado
     plt.subplot(2, 2, 2)
     plt.plot(iters, cumavg_r)
     plt.title("Return acumulado (promedio)")
     plt.xlabel("Iteración")
     plt.ylabel("Return")
 
-    # Subplot 4: Longitud acumulada
     plt.subplot(2, 2, 4)
     plt.plot(iters, cumavg_l)
     plt.title("Longitud acumulada (promedio)")
@@ -163,16 +208,16 @@ def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_
     plt.tight_layout()
     plt.show()
 
-    # === FIGURA 2: RETORNO POR AGENTE ===
+    # =========================
+    # FIGURA 2: RETURN POR AGENTE
+    # =========================
     if r_agent_cols:
         plt.figure(figsize=(12, 6))
         for idx, c in enumerate(r_agent_cols):
-            series = df[c].rolling(SMOOTH_WINDOW, min_periods=1).mean()
+            series = df[c].rolling(smooth_window, min_periods=1).mean()
             is_pred = idx < N_PREDATORS
             label = f"P{idx}" if is_pred else f"H{idx - N_PREDATORS}"
-            # depredadores con línea sólida, herbívoros punteados
-            plt.plot(iters, series, label=label,
-                    linestyle="-" if is_pred else "--")
+            plt.plot(iters, series, label=label, linestyle="-" if is_pred else "--")
         plt.title("Return por agente (media móvil)")
         plt.xlabel("Iteración")
         plt.ylabel("Return")
@@ -180,15 +225,16 @@ def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_
         plt.tight_layout()
         plt.show()
 
-    # === FIGURA 3: LONGITUD POR AGENTE ===
+    # =========================
+    # FIGURA 3: LONGITUD POR AGENTE
+    # =========================
     if l_agent_cols:
         plt.figure(figsize=(12, 6))
         for idx, c in enumerate(l_agent_cols):
-            series = df[c].rolling(SMOOTH_WINDOW, min_periods=1).mean()
+            series = df[c].rolling(smooth_window, min_periods=1).mean()
             is_pred = idx < N_PREDATORS
             label = f"P{idx}" if is_pred else f"H{idx - N_PREDATORS}"
-            plt.plot(iters, series, label=label,
-                    linestyle="-" if is_pred else "--")
+            plt.plot(iters, series, label=label, linestyle="-" if is_pred else "--")
         plt.title("Longitud por agente (media móvil)")
         plt.xlabel("Iteración")
         plt.ylabel("Timesteps")
@@ -196,27 +242,137 @@ def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_
         plt.tight_layout()
         plt.show()
 
-    # === FIGURA 4: RAZONES DE TERMINACIÓN ===
-    if has_reasons:
-        plt.figure(figsize=(10, 4))
-        for c in reason_cols:
-            serie = df[c]
-            label = c.replace("reason_", "").replace("_pct", " %")
-            plt.plot(iters, serie, label=label)
+    # =========================
+    # FIGURA 4: MÉTRICAS POR ROL
+    # =========================
+    if has_role_metrics:
+        fig, axes = plt.subplots(2, 2, figsize=(12, 8))
 
-        plt.title("Razones de terminación de episodios")
+        # Return por rol
+        if {"herbivore_episode_return", "predator_episode_return"}.issubset(df.columns):
+            axes[0, 0].plot(
+                iters,
+                df["herbivore_episode_return"].rolling(smooth_window, min_periods=1).mean(),
+                label="Herbivore",
+            )
+            axes[0, 0].plot(
+                iters,
+                df["predator_episode_return"].rolling(smooth_window, min_periods=1).mean(),
+                label="Predator",
+            )
+            axes[0, 0].set_title("Return por rol")
+            axes[0, 0].set_xlabel("Iteración")
+            axes[0, 0].set_ylabel("Return")
+            axes[0, 0].legend()
+
+        # Longitud por rol
+        if {"herbivore_episode_len", "predator_episode_len"}.issubset(df.columns):
+            axes[0, 1].plot(
+                iters,
+                df["herbivore_episode_len"].rolling(smooth_window, min_periods=1).mean(),
+                label="Herbivore",
+            )
+            axes[0, 1].plot(
+                iters,
+                df["predator_episode_len"].rolling(smooth_window, min_periods=1).mean(),
+                label="Predator",
+            )
+            axes[0, 1].set_title("Longitud por rol")
+            axes[0, 1].set_xlabel("Iteración")
+            axes[0, 1].set_ylabel("Timesteps")
+            axes[0, 1].legend()
+
+        # Survival por rol
+        if {"herbivore_survival_pct", "predator_survival_pct"}.issubset(df.columns):
+            axes[1, 0].plot(
+                iters,
+                df["herbivore_survival_pct"].rolling(smooth_window, min_periods=1).mean(),
+                label="Herbivore",
+            )
+            axes[1, 0].plot(
+                iters,
+                df["predator_survival_pct"].rolling(smooth_window, min_periods=1).mean(),
+                label="Predator",
+            )
+            axes[1, 0].set_title("Supervivencia por rol")
+            axes[1, 0].set_xlabel("Iteración")
+            axes[1, 0].set_ylabel("%")
+            axes[1, 0].legend()
+
+        # Critical ratio por rol
+        if {"herbivore_critical_ratio", "predator_critical_ratio"}.issubset(df.columns):
+            axes[1, 1].plot(
+                iters,
+                df["herbivore_critical_ratio"].rolling(smooth_window, min_periods=1).mean(),
+                label="Herbivore",
+            )
+            axes[1, 1].plot(
+                iters,
+                df["predator_critical_ratio"].rolling(smooth_window, min_periods=1).mean(),
+                label="Predator",
+            )
+            axes[1, 1].set_title("Critical ratio por rol")
+            axes[1, 1].set_xlabel("Iteración")
+            axes[1, 1].set_ylabel("Ratio")
+            axes[1, 1].legend()
+
+        plt.tight_layout()
+        plt.show()
+
+    # =========================
+    # FIGURA 5: RAZONES DE TERMINACIÓN POR ROL
+    # =========================
+    if has_herb_reasons or has_pred_reasons:
+        fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharey=True)
+
+        if has_herb_reasons:
+            for c in herb_reason_cols:
+                serie = df[c].rolling(smooth_window, min_periods=1).mean()
+                label = c.replace("herbivore_reason_", "").replace("_pct", " %")
+                axes[0].plot(iters, serie, label=label)
+            axes[0].set_title("Razones de terminación - Herbívoros")
+            axes[0].set_xlabel("Iteración")
+            axes[0].set_ylabel("Porcentaje")
+            axes[0].legend()
+
+        if has_pred_reasons:
+            for c in pred_reason_cols:
+                serie = df[c].rolling(smooth_window, min_periods=1).mean()
+                label = c.replace("predator_reason_", "").replace("_pct", " %")
+                axes[1].plot(iters, serie, label=label)
+            axes[1].set_title("Razones de terminación - Depredadores")
+            axes[1].set_xlabel("Iteración")
+            axes[1].legend()
+
+        plt.tight_layout()
+        plt.show()
+
+    # =========================
+    # FIGURA 6: MÉTRICAS DE RECURSOS POR ROL
+    # =========================
+    resource_cols = [
+        "herbivore_avg_food", "herbivore_avg_water",
+        "predator_avg_food", "predator_avg_water",
+    ]
+    if all(c in df.columns for c in resource_cols):
+        plt.figure(figsize=(12, 5))
+        for c in resource_cols:
+            serie = df[c].rolling(smooth_window, min_periods=1).mean()
+            plt.plot(iters, serie, label=c)
+        plt.title("Promedio de recursos por rol")
         plt.xlabel("Iteración")
-        plt.ylabel("Porcentaje")
+        plt.ylabel("Promedio normalizado")
         plt.legend()
         plt.tight_layout()
         plt.show()
-     # === FIGURA 5: MÉTRICAS DE ATAQUE ===
+
+    # =========================
+    # FIGURA 7: MÉTRICAS DE ATAQUE
+    # =========================
     if has_attacks:
         plt.figure(figsize=(12, 5))
-
-        # Suavizar counts (attempt/hit/kill)
         for c in ["attacks_attempted", "attacks_hit", "attacks_kill"]:
-            serie = df[c].rolling(SMOOTH_WINDOW, min_periods=1).mean()
+            serie = df[c].rolling(smooth_window, min_periods=1).mean()
             plt.plot(iters, serie, label=c)
 
         plt.title("Ataques (conteos por iteración - media móvil)")
@@ -228,7 +384,7 @@ def _create_plots(iters, r_mean, l_mean, mov_avg_r, mov_avg_l, cumavg_r, cumavg_
 
         plt.figure(figsize=(12, 4))
         for c in ["attack_hit_rate", "attack_kill_rate"]:
-            serie = df[c].rolling(SMOOTH_WINDOW, min_periods=1).mean()
+            serie = df[c].rolling(smooth_window, min_periods=1).mean()
             plt.plot(iters, serie, label=c)
 
         plt.title("Tasas de ataque (media móvil)")

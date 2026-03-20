@@ -78,7 +78,8 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         map_height: int = 600,
         max_steps: int = 350,
         gamma: float = 0.995,
-        n_predators: int = 1
+        n_predators: int = 1,
+        herbivore_vision_radius: float | None = None,
     ):
         """
         Inicializa el entorno multi-agente con agentes y recursos.
@@ -118,6 +119,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         self._init_wat = water_density_scaled
         self.max_steps = max_steps
         self.gamma     = gamma
+        self.herbivore_vision_radius = herbivore_vision_radius
         self.action_spaces = {a: Discrete(7) for a in self.agents}
         # --- Definición de espacios de observación y acción ---
         # Raíz cuadrada de 2 para normalizar distancias diagonales máximas
@@ -274,7 +276,16 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         self._ep_return = {a: 0.0 for a in self.possible_agents}
         self._ep_len    = {a: 0   for a in self.possible_agents}
         self._satiated  = {a: 0   for a in self.possible_agents}
+        self._ep_eat = {a: 0 for a in self.possible_agents}
+        self._ep_drink = {a: 0 for a in self.possible_agents}
 
+        self._ep_attack_attempt = {a: 0 for a in self.possible_agents}
+        self._ep_attack_hit = {a: 0 for a in self.possible_agents}
+        self._ep_attack_kill = {a: 0 for a in self.possible_agents}
+
+        self._ep_food_sum = {a: 0.0 for a in self.possible_agents}
+        self._ep_water_sum = {a: 0.0 for a in self.possible_agents}
+        self._ep_critical_steps = {a: 0 for a in self.possible_agents}
         # Observaciones iniciales
         observations = {
             agent: self._get_obs(self.species[self._agent_idx[agent]])
@@ -348,7 +359,21 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             px, py = preys[0].x, preys[0].y
         d = ((px - sp.x)**2 + (py - sp.y)**2)**0.5
         return d / ((self.map_width**2 + self.map_height**2)**0.5)
+    
+    def _norm_dist_to_predator(self, sp: Specie) -> float:
+        if sp.role is not Role.HERBIVORE:
+            return 1.0
 
+        preds = [a for a in self.species if a.alive and a.role is Role.PREDATOR]
+        if not preds:
+            return 1.0
+
+        coords = np.array([(p.x, p.y) for p in preds], dtype=np.float32)
+        idx = np.argmin(((coords[:, 0] - sp.x) ** 2 + (coords[:, 1] - sp.y) ** 2))
+        px, py = coords[idx]
+
+        d = ((px - sp.x) ** 2 + (py - sp.y) ** 2) ** 0.5
+        return d / ((self.map_width ** 2 + self.map_height ** 2) ** 0.5)
     def _action_mask(self, sp: Specie) -> np.ndarray:
         # 7 acciones: mover(0..3), comer(4), beber(5), atacar(6)
         mask = np.ones(7, dtype=np.int8)
@@ -357,49 +382,11 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         return mask
     
     def _resolve_water_claims(self, ctx: StepContext):
-        for idx, claimers in ctx.wat_claims.items():
-            vivos = [a for a in claimers if not ctx.terminations.get(a, False)]
-            if not vivos:
-                continue
-
-            winner = min(
-                vivos,
-                key=lambda a: self.species[self._agent_idx[a]].water /
-                            self.species[self._agent_idx[a]].max_water
-            )
-
-            sp_w = self.species[self._agent_idx[winner]]
-            sp_w.water = min(sp_w.water + 10, sp_w.max_water)
-
-            ctx.step_bonus[winner] += 5.0
-
-            if self.consume_water(idx):
-                ctx.removed_w += 1
+        return
 
     def _resolve_veg_claims(self, ctx: StepContext):
-        for idx, claimers in ctx.veg_claims.items():
-            vivos = [
-                a for a in claimers
-                if (not ctx.terminations.get(a, False))
-                and self.species[self._agent_idx[a]].alive
-                and self.species[self._agent_idx[a]].role is Role.HERBIVORE
-            ]
-            if not vivos:
-                continue
+        return
 
-            winner = min(
-                vivos,
-                key=lambda a: self.species[self._agent_idx[a]].food /
-                            self.species[self._agent_idx[a]].max_food
-            )
-
-            sp_w = self.species[self._agent_idx[winner]]
-            sp_w.food = min(sp_w.food + 10, sp_w.max_food)
-
-            ctx.step_bonus[winner] += 8.0
-
-            if self.consume_vegetation(idx):
-                ctx.removed_v += 1
     def _apply_step_bonus(self, ctx: StepContext):
         for a in ctx.prev_agents:
             ctx.rewards[a] = float(ctx.rewards.get(a, 0.0) + ctx.step_bonus.get(a, 0.0))
@@ -425,7 +412,15 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             done_term = False
             done_trunc = False
             reason = ""
-
+            ctx.infos.setdefault(agent, {})
+            ctx.infos[agent].update({
+                "eat_success": 0,
+                "drink_success": 0,
+                "attack_attempt": 0,
+                "attack_outcome": "",
+                "attack_hit": 0,
+                "attack_kill": 0,
+            })
             # Cooldown tick aquí (más simple que hacerlo al final)
             if sp.attack_cd > 0:
                 sp.attack_cd -= 1
@@ -438,12 +433,22 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                 w_def = 1.0 - (sp.water / sp.max_water)
 
                 if sp.role is Role.PREDATOR:
-                    # Para depredador: "food" = presa
                     need = "water" if w_def > f_def else "prey"
                     d_prev = self._norm_dist_to_prey(sp) if need == "prey" else self._norm_dist_to(sp, "water")
                 else:
-                    need = "water" if w_def > f_def else "veg"
-                    d_prev = self._norm_dist_to(sp, need)
+                    pred_dx, pred_dy, pred_dist, pred_avail = self._nearest_agent_features(
+                        sp,
+                        target_role=Role.PREDATOR,
+                        max_radius=self.herbivore_vision_radius,
+                    )
+
+                    # Si hay amenaza visible y está bastante cerca, prioriza huir
+                    if pred_avail > 0.0 and pred_dist < 0.25:
+                        need = "escape"
+                        d_prev = pred_dist
+                    else:
+                        need = "water" if w_def > f_def else "veg"
+                        d_prev = self._norm_dist_to(sp, need)
 
                 prey_prev = self._norm_dist_to_prey(sp)
 
@@ -462,44 +467,55 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                         reward -= 0.3
 
                     # progreso hacia objetivo
-                    d_now = self._norm_dist_to_prey(sp) if need == "prey" else self._norm_dist_to(sp, need)
-
-                    reward += 6.0 * (d_prev - d_now)
                     if need == "prey":
+                        d_now = self._norm_dist_to_prey(sp)
+                        reward += 6.0 * (d_prev - d_now)
+
                         diag = (self.map_width**2 + self.map_height**2) ** 0.5
                         in_range = 1.0 if d_now <= (sp.attack_range / diag) else 0.0
-                        reward += 0.5 * in_range   # pequeño bonus por llegar a rango
+                        reward += 0.5 * in_range
+
+                    elif need == "escape":
+                        d_now = self._norm_dist_to_predator(sp)
+
+                        # Recompensar aumentar distancia al depredador
+                        reward += 8.0 * (d_now - d_prev)
+
+                        # Pequeña penalización por quedarse muy cerca
+                        if d_now < 0.12:
+                            reward -= 1.0
+                        elif d_now < 0.20:
+                            reward -= 0.3
+
                     else:
+                        d_now = self._norm_dist_to(sp, need)
+                        reward += 6.0 * (d_prev - d_now)
                         reward += 1.0 * (1.0 - d_now)
                     ctx.energy_after_move[agent] = sp.total_energy
                     reward += 0.02 * (ctx.energy_after_move[agent] - prev_energy)
-
-                    # claims de agua
-                    hit = self.collide_resources((sp.x, sp.y), Specie.AGENT_SIZE, self.water_sources)
-                    if hit.size:
-                        ctx.wat_claims.setdefault(int(hit[0]), []).append(agent)
-
-                    # claims de vegetación (solo herbívoro)
-                    hit = self.collide_resources((sp.x, sp.y), Specie.AGENT_SIZE, self.vegetation)
-                    if hit.size and sp.role is Role.HERBIVORE:
-                        ctx.veg_claims.setdefault(int(hit[0]), []).append(agent)
 
                 # --- comer ---
                 elif a == ACT_EAT:
                     sp.metabolize(BASE_COST)
 
                     if sp.role is Role.PREDATOR:
-                        # depredador no come veg: shaping hacia presa
+                        # depredador no come vegetación
                         prey_now = self._norm_dist_to_prey(sp)
                         reward += 1.0 * (prey_prev - prey_now)
                     else:
                         ate = self.try_eat_vegetation(sp, bite_gain=20.0)
+                        ctx.infos[agent]["eat_success"] = int(ate)
+                        if ate:
+                            self._ep_eat[agent] += 1
                         reward += 1.0 if ate else -0.1
 
                 # --- beber ---
                 elif a == ACT_DRINK:
                     sp.metabolize(BASE_COST)
                     drank = self.try_drink(sp, sip_gain=15.0)
+                    ctx.infos[agent]["drink_success"] = int(drank)
+                    if drank:
+                        self._ep_drink[agent] += 1
                     reward += 0.5 if drank else -0.1
 
                 # --- atacar ---
@@ -507,13 +523,15 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                     sp.metabolize(BASE_COST)
 
                     if sp.role is Role.PREDATOR:
+                        ctx.infos[agent]["attack_attempt"] = 1
+                        self._ep_attack_attempt[agent] += 1
+
                         if sp.attack_cd > 0:
                             reward -= 0.05
                             outcome = "cooldown"
                         else:
                             outcome = self.try_attack(sp, self.species, dmg=50.0)
 
-                            # Recompensas por ataque (esto NO lo habías puesto en el refactor)
                             if outcome == "miss":
                                 reward -= 0.1
                             elif outcome == "hit":
@@ -521,12 +539,17 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                                 sp.attack_cd = PRED_ATTACK_CD
                             elif outcome == "kill":
                                 reward += 25.0
-                                sp.food = min(sp.max_food, sp.food + 60.0)  # <- clave
                                 sp.attack_cd = PRED_ATTACK_CD
 
-                        ctx.infos.setdefault(agent, {})
+                        ctx.infos[agent]["attack_outcome"] = outcome
                         ctx.infos[agent]["attack_hit"] = 1 if outcome in ("hit", "kill") else 0
                         ctx.infos[agent]["attack_kill"] = 1 if outcome == "kill" else 0
+
+                        if outcome in ("hit", "kill"):
+                            self._ep_attack_hit[agent] += 1
+                        if outcome == "kill":
+                            self._ep_attack_kill[agent] += 1
+
                     else:
                         reward -= 0.1
 
@@ -609,12 +632,15 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         cur_veg = self.vegetation["x"].shape[0]
         cur_wat = self.water_sources["x"].shape[0]
 
-        spawn_veg = max(0, min(max(1, ctx.removed_v // 2), target_veg - cur_veg))
-        spawn_wat = max(0, min(max(1, ctx.removed_w // 2), target_wat - cur_wat))
+        missing_veg = max(0, target_veg - cur_veg)
+        missing_wat = max(0, target_wat - cur_wat)
 
-        if spawn_veg:
+        if missing_veg > 0:
+            spawn_veg = max(1, missing_veg // 2)
             self.spawn_vegetation(n=spawn_veg)
-        if spawn_wat:
+
+        if missing_wat > 0:
+            spawn_wat = max(1, missing_wat // 2)
             self.spawn_water(n=spawn_wat)
 
 
@@ -634,14 +660,43 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
     def _build_obs_and_episode_metrics(self, ctx: StepContext):
         for agent in ctx.prev_agents:
-            ctx.obs[agent] = self._get_obs(self.species[self._agent_idx[agent]])
+            sp = self.species[self._agent_idx[agent]]
+            ctx.obs[agent] = self._get_obs(sp)
 
             ctx.infos.setdefault(agent, {})
+
+            # Métricas básicas por episodio
             self._ep_return[agent] = self._ep_return.get(agent, 0.0) + ctx.rewards.get(agent, 0.0)
             self._ep_len[agent] = self._ep_len.get(agent, 0) + 1
 
-            ctx.infos[agent].setdefault("ep_return", self._ep_return[agent])
-            ctx.infos[agent].setdefault("ep_len", self._ep_len[agent])
+            # Estado promedio de recursos
+            f_norm = sp.food / sp.max_food
+            w_norm = sp.water / sp.max_water
+            self._ep_food_sum[agent] += f_norm
+            self._ep_water_sum[agent] += w_norm
+
+            # Estado crítico
+            if min(f_norm, w_norm) < 0.15:
+                self._ep_critical_steps[agent] += 1
+
+            ep_len = max(1, self._ep_len[agent])
+
+            # Guardar resumen acumulado en info
+            ctx.infos[agent]["ep_return"] = float(self._ep_return[agent])
+            ctx.infos[agent]["ep_len"] = int(self._ep_len[agent])
+
+            ctx.infos[agent]["ep_eat"] = int(self._ep_eat[agent])
+            ctx.infos[agent]["ep_drink"] = int(self._ep_drink[agent])
+
+            ctx.infos[agent]["ep_attack_attempt"] = int(self._ep_attack_attempt[agent])
+            ctx.infos[agent]["ep_attack_hit"] = int(self._ep_attack_hit[agent])
+            ctx.infos[agent]["ep_attack_kill"] = int(self._ep_attack_kill[agent])
+
+            ctx.infos[agent]["ep_avg_food"] = float(self._ep_food_sum[agent] / ep_len)
+            ctx.infos[agent]["ep_avg_water"] = float(self._ep_water_sum[agent] / ep_len)
+
+            ctx.infos[agent]["ep_critical_steps"] = int(self._ep_critical_steps[agent])
+            ctx.infos[agent]["ep_critical_ratio"] = float(self._ep_critical_steps[agent] / ep_len)
 
 
     def _apply_timeout_if_needed(self, ctx: StepContext):
@@ -653,8 +708,6 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
     def step(self, actions):
         ctx = self._init_step_context()
         self._process_agents(actions, ctx)
-        self._resolve_water_claims(ctx)
-        self._resolve_veg_claims(ctx)
         self._apply_step_bonus(ctx)
         self._apply_post_move_energy_shaping(ctx)
         self._respawn_resources_if_needed(ctx)
@@ -664,83 +717,105 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         self._apply_timeout_if_needed(ctx)
         self.agents = ctx.alive
         return ctx.obs, ctx.rewards, ctx.terminations, ctx.truncations, ctx.infos
+    def _nearest_agent_features(
+        self,
+        sp: Specie,
+        target_role: Role,
+        max_radius: float | None = None,
+    ):
+        """
+        Retorna (dx, dy, dist, avail) del agente vivo más cercano con el rol target_role.
+
+        dx, dy se normalizan por ancho/alto del mapa.
+        dist se normaliza y queda en [0, sqrt(2)] aproximadamente.
+        avail = 1.0 si existe objetivo visible, 0.0 si no.
+        """
+
+        targets = [
+            a for a in self.species
+            if a.alive and a.role is target_role and a is not sp
+        ]
+
+        if not targets:
+            return 0.0, 0.0, 1.0, 0.0
+
+        coords = np.array([(t.x, t.y) for t in targets], dtype=np.float32)
+        d2 = (coords[:, 0] - sp.x) ** 2 + (coords[:, 1] - sp.y) ** 2
+        idx = int(np.argmin(d2))
+
+        tx, ty = coords[idx]
+        real_dist = float(np.sqrt(d2[idx]))
+
+        # Si hay radio de visión y está fuera, no se detecta
+        if max_radius is not None and real_dist > max_radius:
+            return 0.0, 0.0, 1.0, 0.0
+
+        dx = (tx - sp.x) / self.map_width
+        dy = (ty - sp.y) / self.map_height
+        dist = float(np.sqrt(dx**2 + dy**2))
+
+        return dx, dy, dist, 1.0
     
     def _get_obs(self, sp: Specie) -> np.ndarray:
         """
-        Construye la observación para un agente específico.
-        
-        La observación contiene 10 características normalizadas:
-        0-1: Niveles de recursos del agente (comida, agua) [0-1]
-        2-3: Vector dirección al agua más cercana (dx, dy) [-1 a 1]
-        4-5: Vector dirección a la vegetación más cercana (dx, dy) [-1 a 1]
-        6: Distancia al agua más cercana [0 a sqrt(2)]
-        7: Distancia a la vegetación más cercana [0 a sqrt(2)]
-        8: Flag de disponibilidad de agua (0 o 1)
-        9: Flag de disponibilidad de vegetación (0 o 1)
-        
-        Args:
-            sp: Objeto Specie del cual generar la observación
-            
-        Returns:
-            np.ndarray: Array de 10 elementos con la observación normalizada
+        Observación de 16 dimensiones:
+
+        0-1   : food, water del agente
+        2-3   : dirección al agua más cercana
+        4-5   : dirección a la vegetación más cercana
+        6-7   : distancia al agua / vegetación
+        8-9   : disponibilidad de agua / vegetación
+        10-11 : one-hot del rol (herbívoro, depredador)
+        12-15 : entidad animal relevante más cercana
+                - depredador -> herbívoro más cercano
+                - herbívoro  -> depredador más cercano
+                (dx, dy, dist, avail)
         """
-        # Verificar disponibilidad de recursos
         w_avail = float(self._wat_tree is not None and self.water_sources["centers"].size > 0)
         v_avail = float(self._veg_tree is not None and self.vegetation["centers"].size > 0)
 
-        # === CALCULAR INFORMACIÓN SOBRE AGUA ===
+        # Agua
         if w_avail:
-            # Encontrar agua más cercana
             _, idx_w = self._wat_tree.query([sp.x, sp.y], k=1)
             wx, wy = self.water_sources["centers"][idx_w]
-            
-            # Vector dirección normalizado (respecto al tamaño del mapa)
-            dx_w, dy_w = (wx - sp.x)/self.map_width, (wy - sp.y)/self.map_height
-            
-            # Distancia euclidiana normalizada
-            dist_w = (dx_w**2 + dy_w**2)**0.5
+            dx_w = (wx - sp.x) / self.map_width
+            dy_w = (wy - sp.y) / self.map_height
+            dist_w = (dx_w**2 + dy_w**2) ** 0.5
         else:
-            # No hay agua disponible
             dx_w = dy_w = 0.0
-            dist_w = 1.0  # Distancia máxima
+            dist_w = 1.0
 
-        # === CALCULAR INFORMACIÓN SOBRE VEGETACIÓN ===
+        # Vegetación
         if v_avail:
-            # Encontrar vegetación más cercana
             _, idx_v = self._veg_tree.query([sp.x, sp.y], k=1)
             vx, vy = self.vegetation["centers"][idx_v]
-            
-            # Vector dirección normalizado
-            dx_v, dy_v = (vx - sp.x)/self.map_width, (vy - sp.y)/self.map_height
-            
-            # Distancia euclidiana normalizada
-            dist_v = (dx_v**2 + dy_v**2)**0.5
+            dx_v = (vx - sp.x) / self.map_width
+            dy_v = (vy - sp.y) / self.map_height
+            dist_v = (dx_v**2 + dy_v**2) ** 0.5
         else:
-            # No hay vegetación disponible
             dx_v = dy_v = 0.0
-            dist_v = 1.0  # Distancia máxima
+            dist_v = 1.0
 
-        # Rol (one-hot)
         role_h = 1.0 if sp.role is Role.HERBIVORE else 0.0
         role_p = 1.0 if sp.role is Role.PREDATOR else 0.0
 
-        # Vector a la presa más cercana (solo útil para depredador)
-        prey_dx = prey_dy = 0.0
-        prey_dist = 1.0
-        prey_avail = 0.0
+        # Animal relevante más cercano
+        other_dx = other_dy = 0.0
+        other_dist = 1.0
+        other_avail = 0.0
+
         if sp.role is Role.PREDATOR:
-            preys = [a for a in self.species if a.alive and a.role is Role.HERBIVORE]
-            if preys:
-                prey_avail = 1.0
-                if len(preys) >= 2:
-                    coords = np.array([(p.x, p.y) for p in preys], dtype=np.float32)
-                    tree = KDTree(coords)
-                    _, idx_p = tree.query([sp.x, sp.y], k=1)
-                    px, py = coords[int(idx_p)]
-                else:
-                    px, py = preys[0].x, preys[0].y
-                prey_dx, prey_dy = (px - sp.x)/self.map_width, (py - sp.y)/self.map_height
-                prey_dist = (prey_dx**2 + prey_dy**2)**0.5
+            other_dx, other_dy, other_dist, other_avail = self._nearest_agent_features(
+                sp,
+                target_role=Role.HERBIVORE,
+                max_radius=None,
+            )
+        else:
+            other_dx, other_dy, other_dist, other_avail = self._nearest_agent_features(
+                sp,
+                target_role=Role.PREDATOR,
+                max_radius=self.herbivore_vision_radius,
+            )
 
         f_norm = sp.food / sp.max_food
         w_norm = sp.water / sp.max_water
@@ -751,7 +826,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             dist_w, dist_v,
             w_avail, v_avail,
             role_h, role_p,
-            prey_dx, prey_dy, prey_dist, prey_avail
+            other_dx, other_dy, other_dist, other_avail
         ], dtype=np.float32)
 
     

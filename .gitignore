@@ -1,7 +1,26 @@
+# Entornos virtuales
 .venv/
 venv/
+
+# Python
 __pycache__/
 *.pyc
+*.pyo
+
+# Variables de entorno
 .env
-.csv
+
+# Salidas del proyecto
 monitor.csv
+outputs/
+results/
+checkpoints/
+ray_results/
+
+# Logs
+*.log
+
+# Configs locales del editor / sistema
+.vscode/
+.idea/
+.DS_Store
