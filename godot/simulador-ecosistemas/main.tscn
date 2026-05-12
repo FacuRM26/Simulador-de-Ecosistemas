@@ -5,8 +5,7 @@
 [node name="Main" type="Node2D"]
 script = ExtResource("1_ig7tw")
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
-
-[node name="StatsLabel" type="Label" parent="CanvasLayer"]
-offset_right = 40.0
+[node name="StatsLabel" type="Label" parent="."]
+offset_right = 10.0
 offset_bottom = 23.0
+text = "a"

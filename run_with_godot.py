@@ -43,7 +43,7 @@ ENV_CFG = {
     "n_predators": 2,
 }
 NUM_RUNNERS  = 4
-NUM_ITERS    = 100
+NUM_ITERS    = 400
 VIS_START_IT = 5   # Iteración a partir de la cual se envía estado a Godot
 
 
@@ -91,7 +91,7 @@ def _run_godot_episode(trainer, env_cfg: dict, iteration: int) -> None:
         )
         update_ecosystem_state(state)
 
-        time.sleep(0.06)  # Pausa para que Godot pueda consumir el estado
+        time.sleep(0.06)  # Pausa para que Godot pueda consumir el estado (Tiempo entre fotogramas)
 
         if all(terminations.values()) or all(truncations.values()):
             break
