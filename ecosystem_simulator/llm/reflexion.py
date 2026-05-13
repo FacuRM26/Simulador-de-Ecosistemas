@@ -103,7 +103,7 @@ class EpisodeMemory:
     def get_statistics(self) -> Dict[str, Any]:
         """Retorna estadísticas del historial."""
         if not self.episodes:
-            return {"episodes": 0}
+            return {"total_episodes": 0, "episodes": 0}
         
         episodes_list = list(self.episodes)
         successful = sum(1 for ep in episodes_list if ep["success"])
@@ -112,6 +112,7 @@ class EpisodeMemory:
         
         return {
             "total_episodes": len(episodes_list),
+            "episodes": len(episodes_list),
             "successful": successful,
             "success_rate": successful / len(episodes_list) if episodes_list else 0,
             "avg_reward": avg_reward,
@@ -273,15 +274,16 @@ Sé específico y accionable."""
             String con contexto de lecciones aprendidas.
         """
         stats = self.memory.get_statistics()
-        
-        if stats["episodes"] == 0:
+
+        total_episodes = stats.get("total_episodes", stats.get("episodes", 0))
+        if total_episodes == 0:
             return "Sin experiencia previa aún."
         
         lessons = self.memory.get_recent_lessons(3)
         success_rate = stats.get("success_rate", 0)
         
         context = f"""Experiencia acumulada:
-- Total episodios: {stats['episodes']}
+    - Total episodios: {total_episodes}
 - Tasa de éxito: {success_rate:.1%}
 - Recompensa promedio: {stats['avg_reward']:.2f}
 
