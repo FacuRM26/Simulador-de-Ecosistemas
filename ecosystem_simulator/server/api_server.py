@@ -103,6 +103,7 @@ def serialize_ecosystem_state(env, agents: List, episode: int, step: int) -> Dic
             "max_water": float(agent.max_water),
             "alive": is_alive,
             "role": role_int,          # ← entero, no string
+            "total_energy": float(getattr(agent, "total_energy", 0.0)),
         })
 
     # ── Vegetación ─────────────────────────────────────────────────────────

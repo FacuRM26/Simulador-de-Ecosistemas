@@ -14,3 +14,4 @@ pygame
 pydantic
 flask
 flask_cors
+requests

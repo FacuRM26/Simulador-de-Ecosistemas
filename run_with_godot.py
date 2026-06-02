@@ -33,23 +33,16 @@ from ecosystem_simulator.server.api_server import (
     serialize_ecosystem_state,
 )
 from ecosystem_simulator.utils.visualization import analyze_training_results
+from ecosystem_simulator.config import DEFAULT_ENV_CFG, DEFAULT_NUM_RUNNERS, DEFAULT_NUM_ITERS
 
 
 # ─────────────────────────────────────────────
-#  Configuración central (igual que trainer.py)
+#  Configuración central
 # ─────────────────────────────────────────────
-ENV_CFG = {
-    "n_agents": 8,
-    "veg_density": 15,
-    "water_density": 10,
-    "map_width": 800,
-    "map_height": 600,
-    "max_steps": 350,
-    "n_predators": 2,
-}
-NUM_RUNNERS = 6
-NUM_ITERS = 2000
-VIS_START_IT = 2000
+ENV_CFG = DEFAULT_ENV_CFG.copy()
+NUM_RUNNERS  = DEFAULT_NUM_RUNNERS
+NUM_ITERS    = DEFAULT_NUM_ITERS
+VIS_START_IT = 5   # Iteración a partir de la cual se envía estado a Godot
 
 
 # ─────────────────────────────────────────────
@@ -101,7 +94,7 @@ def _run_godot_episode(trainer, env_cfg: dict, iteration: int) -> None:
 
         update_ecosystem_state(state)
 
-        time.sleep(0.06)
+        time.sleep(0.06)  # Pausa para que Godot pueda consumir el estado (Tiempo entre fotogramas)
 
         if all(terminations.values()) or all(truncations.values()):
             break

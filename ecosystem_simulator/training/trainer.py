@@ -13,9 +13,11 @@ import ray
 from ..environment.multi_agent_ecosystem import MultiAgentEcosystem
 from .callbacks import PerAgentAndReasonMetrics
 
-NUM_ITERS = 5000
-VIS_START_FRAC = 0.7
-VIS_INTERVAL = 10
+from ecosystem_simulator.config import DEFAULT_ENV_CFG, DEFAULT_NUM_RUNNERS, DEFAULT_NUM_ITERS
+
+NUM_ITERS       = DEFAULT_NUM_ITERS         
+VIS_START_FRAC  = 0.7         # empezar al 50% del entrenamiento
+VIS_INTERVAL    = 10  
 
 try:
     from ..utils.pygame_visualizer import EcosystemVisualizer
@@ -364,23 +366,18 @@ def run_policy_episode(trainer, env_cfg: dict, step_callback=None):
 def main(enable_visualization: bool = False):
     ray.init(ignore_reinit_error=True)
 
-    env_cfg = {
-        "n_agents": 8,
-        "veg_density": 15,
-        "water_density": 10,
-        "map_width": 800,
-        "map_height": 600,
-        "max_steps": 350,
-        "n_predators": 2,
-        "herbivore_vision_radius": None,
-    }
+    # --- Configuración del entorno ---
+    ENV_CFG = DEFAULT_ENV_CFG.copy()
+    n_agents = ENV_CFG["n_predators"] + ENV_CFG["n_herbivores"]
 
-    num_runners = 1
-    n_agents = env_cfg["n_agents"]
+    # Parámetros de entrenamiento
+    NUM_RUNNERS  = DEFAULT_NUM_RUNNERS
+    FRAG = ENV_CFG["max_steps"]
+    TOTAL_BATCH = NUM_RUNNERS * FRAG
 
     config = build_config(
-        env_cfg=env_cfg,
-        num_runners=num_runners,
+        env_cfg=ENV_CFG,
+        num_runners=NUM_RUNNERS,
         callbacks_class=PerAgentAndReasonMetrics,
     )
 
@@ -390,8 +387,8 @@ def main(enable_visualization: bool = False):
     visualizer = None
     if enable_visualization and HAS_PYGAME:
         visualizer = EcosystemVisualizer(
-            map_width=env_cfg["map_width"],
-            map_height=env_cfg["map_height"]
+            map_width=ENV_CFG["map_width"],
+            map_height=ENV_CFG["map_height"]
         )
         print("Visualización en tiempo real activada")
 
@@ -430,7 +427,7 @@ def main(enable_visualization: bool = False):
                                 env, env.species, step, i, rewards, metrics
                             )
 
-                        run_policy_episode(trainer, env_cfg, step_callback=render_step)
+                        run_policy_episode(trainer, ENV_CFG, step_callback=render_step)
                         print("Visualización completada")
 
                     except Exception as e:
