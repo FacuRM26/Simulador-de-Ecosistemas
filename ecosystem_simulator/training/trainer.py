@@ -1,7 +1,6 @@
 """
 Módulo principal para el entrenamiento del modelo RL.
 """
-from email.policy import default
 import os
 os.environ.pop("AIR_VERBOSITY", None)
 import logging
@@ -17,7 +16,9 @@ from ray.rllib.policy.policy import PolicySpec
 from ..environment.multi_agent_ecosystem import MultiAgentEcosystem
 from .callbacks import PerAgentAndReasonMetrics
 
-NUM_ITERS       = 500         
+from ecosystem_simulator.config import DEFAULT_ENV_CFG, DEFAULT_NUM_RUNNERS, DEFAULT_NUM_ITERS
+
+NUM_ITERS       = DEFAULT_NUM_ITERS         
 VIS_START_FRAC  = 0.7         # empezar al 50% del entrenamiento
 VIS_INTERVAL    = 10  
 
@@ -121,19 +122,11 @@ def main(enable_visualization: bool = False):
     ray.init(ignore_reinit_error=True)
 
     # --- Configuración del entorno ---
-    ENV_CFG = {
-        "n_agents": 8,
-        "veg_density": 15,
-        "water_density": 10,
-        "map_width": 800,
-        "map_height": 600,
-        "max_steps": 350,
-        "n_predators": 2,
-    }
+    ENV_CFG = DEFAULT_ENV_CFG.copy()
 
     # Parámetros de entrenamiento
-    NUM_RUNNERS = 4
-    FRAG = 350  # ENV_CFG["max_steps"]
+    NUM_RUNNERS  = DEFAULT_NUM_RUNNERS
+    FRAG = ENV_CFG["max_steps"]
     TOTAL_BATCH = NUM_RUNNERS * FRAG
 
     register_env(

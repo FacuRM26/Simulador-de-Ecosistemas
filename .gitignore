@@ -5,4 +5,7 @@ __pycache__/
 .env
 .csv
 monitor.csv
+monitor_llm_behavior.csv
+monitor_llm_reflexion.csv
+monitor_llm_reward_shaping.csv
 .csv

@@ -35,6 +35,7 @@ from ecosystem_simulator.training.trainer import build_config
 from ecosystem_simulator.training.callbacks import PerAgentAndReasonMetrics
 from ecosystem_simulator.llm.reflexion import ReflectionAgent
 from ecosystem_simulator.llm.ollama_utils import check_ollama_available, OllamaError
+from ecosystem_simulator.config import DEFAULT_ENV_CFG, DEFAULT_NUM_RUNNERS, DEFAULT_NUM_ITERS
 
 # Configuración de logging
 logging.basicConfig(
@@ -43,19 +44,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Configuración central
-ENV_CFG = {
-    "n_agents": 8,
-    "veg_density": 15,
-    "water_density": 10,
-    "map_width": 800,
-    "map_height": 600,
-    "max_steps": 350,
-    "n_predators": 2,
-}
 
-NUM_RUNNERS = 4
-NUM_ITERS = 100  # Reducido para pruebas
+# ─────────────────────────────────────────────
+#  Configuración central
+# ─────────────────────────────────────────────
+ENV_CFG = DEFAULT_ENV_CFG.copy()
+NUM_RUNNERS  = DEFAULT_NUM_RUNNERS
+NUM_ITERS    = DEFAULT_NUM_ITERS
 LLM_MODEL = "mistral"
 REFLECTION_INTERVAL = 5  # Generar reflexión cada N episodios
 
