@@ -36,6 +36,28 @@ class StepContext:
     removed_w: int = 0
     episode_trunc: bool = False
 
+@dataclass
+class AgentMemory:
+    # Última dirección conocida hacia agua
+    last_water_dx: float = 0.0
+    last_water_dy: float = 0.0
+    last_water_dist: float = 1.0
+    water_seen: float = 0.0
+    water_age: float = 1.0   # normalizado 0..1, 0 = recién visto, 1 = muy viejo
+
+    # Última dirección conocida hacia vegetación
+    last_veg_dx: float = 0.0
+    last_veg_dy: float = 0.0
+    last_veg_dist: float = 1.0
+    veg_seen: float = 0.0
+    veg_age: float = 1.0
+
+    # Memoria de interacción / rendimiento reciente
+    last_reward: float = 0.0
+    reward_ema: float = 0.0          # promedio suavizado reciente
+    failed_action_streak: int = 0
+    danger_steps_recent: int = 0     # pasos recientes con depredador cerca o riesgo
+
 # Direcciones posibles para el movimiento
 DIRECTIONS = ["north", "south", "east", "west"]
 ACT_EAT    = 4
@@ -78,8 +100,9 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         map_height: int = 600,
         max_steps: int = 350,
         gamma: float = 0.995,
-        n_predators: int = 1,
+         n_predators: int = 1,
         herbivore_vision_radius: float | None = None,
+        herbivore_resource_vision_radius: float | None = 140.0,
     ):
         """
         Inicializa el entorno multi-agente con agentes y recursos.
@@ -120,33 +143,82 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         self.max_steps = max_steps
         self.gamma     = gamma
         self.herbivore_vision_radius = herbivore_vision_radius
+        self.herbivore_resource_vision_radius = herbivore_resource_vision_radius
         self.action_spaces = {a: Discrete(7) for a in self.agents}
+        self.memory_horizon = 25  # pasos antes de considerar una memoria "vieja"
+
+        # Memoria corta por agente (se reinicia cada episodio)
+        self._agent_memory = {
+            a: AgentMemory() for a in self.agents
+        }
+
+        # Memoria larga simple entre episodios
+        # [food_risk, water_risk, danger, exploration_need]
+        self._ltm_bias = {
+            a: np.zeros(4, dtype=np.float32) for a in self.agents
+        }
         # --- Definición de espacios de observación y acción ---
         # Raíz cuadrada de 2 para normalizar distancias diagonales máximas
         SQRT2 = np.sqrt(2.0)
 
-        # Límites inferiores de la observación
-        low  = np.array(
-            [0, 0, -1, -1, -1, -1,
-             0, 0,
-             0, 0,
-             0, 0,
-             -1, -1, 0, 0],
+        # 34 features:
+        # 0-15  : observación base actual
+        # 16-20 : memoria agua   (dx, dy, dist, seen, age)
+        # 21-25 : memoria veg    (dx, dy, dist, seen, age)
+        # 26-29 : memoria reciente (last_reward, reward_ema, fail_streak, danger_recent)
+        # 30-33 : memoria larga  (food_risk, water_risk, danger, exploration_need)
+
+        low = np.array(
+            [
+                # Base 16
+                0, 0, -1, -1, -1, -1,
+                0, 0,
+                0, 0,
+                0, 0,
+                -1, -1, 0, 0,
+
+                # Water memory
+                -1, -1, 0, 0, 0,
+
+                # Veg memory
+                -1, -1, 0, 0, 0,
+
+                # Recent performance
+                -1, -1, 0, 0,
+
+                # Long-term bias
+                0, 0, 0, 0
+            ],
             dtype=np.float32
         )
 
-        # Límites superiores de la observación
         high = np.array(
-            [1, 1,  1,  1,  1,  1,
-             SQRT2, SQRT2,
-             1, 1,
-             1, 1,
-             1, 1, SQRT2, 1],
+            [
+                # Base 16
+                1, 1, 1, 1, 1, 1,
+                SQRT2, SQRT2,
+                1, 1,
+                1, 1,
+                1, 1, SQRT2, 1,
+
+                # Water memory
+                1, 1, SQRT2, 1, 1,
+
+                # Veg memory
+                1, 1, SQRT2, 1, 1,
+
+                # Recent performance
+                1, 1, 1, 1,
+
+                # Long-term bias
+                1, 1, 1, 1
+            ],
             dtype=np.float32
         )
 
-        # Espacio de observación: continuo con 16 características normalizadas
-        self.observation_spaces = {a: Box(low, high, dtype=np.float32) for a in self.agents}
+        self.observation_spaces = {
+            a: Box(low, high, dtype=np.float32) for a in self.agents
+        }
         
         # Contador de pasos en el episodio actual
         self._step_count = 0
@@ -212,7 +284,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             agent: ID del agente (ej. "agent_0")
             
         Returns:
-            gym.Space: Espacio de observación (Box de 16 dimensiones)
+            gym.Space: Espacio de observación (Box de 34 dimensiones)
         """
         return self.observation_spaces[agent]
 
@@ -271,7 +343,14 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
         # Repoblar lista de agentes activos en este episodio
         self.agents = list(self.possible_agents)
-
+        # Reiniciar memoria corta por episodio
+        self._agent_memory = {
+            a: AgentMemory() for a in self.possible_agents
+        }
+        # Asegurar que exista memoria larga para todos los agentes
+        for a in self.possible_agents:
+            if a not in self._ltm_bias:
+                self._ltm_bias[a] = np.zeros(4, dtype=np.float32)
         # Contadores por episodio
         self._ep_return = {a: 0.0 for a in self.possible_agents}
         self._ep_len    = {a: 0   for a in self.possible_agents}
@@ -288,7 +367,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         self._ep_critical_steps = {a: 0 for a in self.possible_agents}
         # Observaciones iniciales
         observations = {
-            agent: self._get_obs(self.species[self._agent_idx[agent]])
+            agent: self._get_obs(self.species[self._agent_idx[agent]], agent)
             for agent in self.agents
         }
 
@@ -374,6 +453,156 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
         d = ((px - sp.x) ** 2 + (py - sp.y) ** 2) ** 0.5
         return d / ((self.map_width ** 2 + self.map_height ** 2) ** 0.5)
+    
+    def _age_memories(self):
+        for agent in self.agents:
+            mem = self._agent_memory[agent]
+
+            if mem.water_seen > 0.0:
+                mem.water_age = min(1.0, mem.water_age + 1.0 / self.memory_horizon)
+                if mem.water_age >= 1.0:
+                    mem.water_seen = 0.0
+
+            if mem.veg_seen > 0.0:
+                mem.veg_age = min(1.0, mem.veg_age + 1.0 / self.memory_horizon)
+                if mem.veg_age >= 1.0:
+                    mem.veg_seen = 0.0
+
+            if mem.danger_steps_recent > 0:
+                mem.danger_steps_recent = max(0, mem.danger_steps_recent - 1)
+
+    def _update_agent_memory_pre_action(self, agent: str, sp: Specie):
+        """
+        Actualiza memoria corta antes de ejecutar la acción:
+        - última info de agua visible
+        - última info de vegetación visible
+        - peligro reciente (para herbívoros)
+        """
+        mem = self._agent_memory[agent]
+
+        # Solo restringimos recursos para herbívoros
+        resource_radius = (
+            self.herbivore_resource_vision_radius
+            if sp.role is Role.HERBIVORE
+            else None
+        )
+
+        # --- Agua visible ---
+        dx_w, dy_w, dist_w, w_avail = self._nearest_resource_features(
+            sp,
+            kind="water",
+            max_radius=resource_radius,
+        )
+
+        if w_avail > 0.0:
+            mem.last_water_dx = float(dx_w)
+            mem.last_water_dy = float(dy_w)
+            mem.last_water_dist = float(dist_w)
+            mem.water_seen = 1.0
+            mem.water_age = 0.0
+
+        # --- Vegetación visible ---
+        dx_v, dy_v, dist_v, v_avail = self._nearest_resource_features(
+            sp,
+            kind="veg",
+            max_radius=resource_radius,
+        )
+
+        if v_avail > 0.0:
+            mem.last_veg_dx = float(dx_v)
+            mem.last_veg_dy = float(dy_v)
+            mem.last_veg_dist = float(dist_v)
+            mem.veg_seen = 1.0
+            mem.veg_age = 0.0
+
+        # --- Peligro reciente ---
+        if sp.role is Role.HERBIVORE:
+            _, _, pred_dist, pred_avail = self._nearest_agent_features(
+                sp,
+                target_role=Role.PREDATOR,
+                max_radius=self.herbivore_vision_radius,
+            )
+
+            if pred_avail > 0.0 and pred_dist < 0.25:
+                mem.danger_steps_recent = min(
+                    self.memory_horizon,
+                    mem.danger_steps_recent + 3
+                )
+
+
+    def _update_agent_memory_post_action(
+        self,
+        agent: str,
+        action: int | None,
+        reward: float,
+        info: dict,
+    ):
+        """
+        Actualiza memoria corta después de la acción:
+        - reward reciente
+        - promedio suavizado de reward
+        - racha de acciones fallidas
+        """
+        mem = self._agent_memory[agent]
+
+        mem.last_reward = float(reward)
+        mem.reward_ema = float(0.9 * mem.reward_ema + 0.1 * reward)
+
+        failed = False
+
+        if action is None:
+            failed = False
+        elif action == ACT_EAT:
+            failed = info.get("eat_success", 0) == 0
+        elif action == ACT_DRINK:
+            failed = info.get("drink_success", 0) == 0
+        elif action == ACT_ATTACK:
+            failed = info.get("attack_outcome", "") in ("", "miss", "cooldown")
+        elif 0 <= action <= 3:
+            failed = reward < -0.05
+
+        if failed:
+            mem.failed_action_streak = min(10, mem.failed_action_streak + 1)
+        else:
+            mem.failed_action_streak = 0
+
+
+    def _update_long_term_bias(self, agent: str, terminal_reason: str):
+        """
+        Construye una memoria larga simple entre episodios:
+        [food_risk, water_risk, danger, exploration_need]
+        """
+        ep_len = max(1, self._ep_len[agent])
+
+        avg_food = self._ep_food_sum[agent] / ep_len
+        avg_water = self._ep_water_sum[agent] / ep_len
+        critical_ratio = self._ep_critical_steps[agent] / ep_len
+
+        # Riesgo por recursos
+        food_risk = float(1.0 - avg_food)
+        water_risk = float(1.0 - avg_water)
+
+        # Riesgo / peligro
+        danger = 1.0 if terminal_reason == "predation" else min(
+            1.0, self._agent_memory[agent].danger_steps_recent / 5.0
+        )
+
+        # Necesidad de exploración:
+        # si casi no encontró comida/agua en un episodio relativamente largo
+        total_intake = self._ep_eat[agent] + self._ep_drink[agent]
+        if ep_len > 40 and total_intake <= 1:
+            exploration_need = 1.0
+        else:
+            exploration_need = min(1.0, critical_ratio * 1.5)
+
+        new_bias = np.array(
+            [food_risk, water_risk, danger, exploration_need],
+            dtype=np.float32
+        )
+
+        # EMA para que la memoria larga no cambie de golpe
+        self._ltm_bias[agent] = 0.7 * self._ltm_bias[agent] + 0.3 * new_bias
+
     def _action_mask(self, sp: Specie) -> np.ndarray:
         # 7 acciones: mover(0..3), comer(4), beber(5), atacar(6)
         mask = np.ones(7, dtype=np.int8)
@@ -392,6 +621,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             ctx.rewards[a] = float(ctx.rewards.get(a, 0.0) + ctx.step_bonus.get(a, 0.0))
     def _init_step_context(self) -> StepContext:
         self._step_count += 1
+        self._age_memories()
         prev_agents = list(self.agents)
         ctx = StepContext(prev_agents=prev_agents)
         ctx.episode_trunc = (self._step_count >= self.max_steps)
@@ -412,6 +642,10 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             done_term = False
             done_trunc = False
             reason = ""
+            a = None
+
+            # Actualizar memoria antes de decidir
+            self._update_agent_memory_pre_action(agent, sp)
             ctx.infos.setdefault(agent, {})
             ctx.infos[agent].update({
                 "eat_success": 0,
@@ -434,7 +668,11 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
                 if sp.role is Role.PREDATOR:
                     need = "water" if w_def > f_def else "prey"
-                    d_prev = self._norm_dist_to_prey(sp) if need == "prey" else self._norm_dist_to(sp, "water")
+                    d_prev = (
+                        self._norm_dist_to_prey(sp)
+                        if need == "prey"
+                        else self._norm_dist_to(sp, "water")
+                    )
                 else:
                     pred_dx, pred_dy, pred_dist, pred_avail = self._nearest_agent_features(
                         sp,
@@ -446,9 +684,18 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                     if pred_avail > 0.0 and pred_dist < 0.25:
                         need = "escape"
                         d_prev = pred_dist
+                        resource_visible_prev = 0.0
                     else:
                         need = "water" if w_def > f_def else "veg"
-                        d_prev = self._norm_dist_to(sp, need)
+
+                        _, _, d_prev_visible, resource_visible_prev = self._nearest_resource_features(
+                            sp,
+                            kind=need,
+                            max_radius=self.herbivore_resource_vision_radius,
+                        )
+
+                        # Si no ve recurso, usamos distancia "máxima" para indicar ausencia visual
+                        d_prev = d_prev_visible if resource_visible_prev > 0.0 else 1.0
 
                 prey_prev = self._norm_dist_to_prey(sp)
 
@@ -488,9 +735,28 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                             reward -= 0.3
 
                     else:
-                        d_now = self._norm_dist_to(sp, need)
-                        reward += 6.0 * (d_prev - d_now)
-                        reward += 1.0 * (1.0 - d_now)
+                        # Herbívoro: solo reward denso por recurso si el recurso está visible
+                        if sp.role is Role.HERBIVORE:
+                            _, _, d_now_visible, resource_visible_now = self._nearest_resource_features(
+                                sp,
+                                kind=need,
+                                max_radius=self.herbivore_resource_vision_radius,
+                            )
+
+                            if resource_visible_now > 0.0:
+                                d_now = d_now_visible
+                                reward += 6.0 * (d_prev - d_now)
+                                reward += 1.0 * (1.0 - d_now)
+                            else:
+                                # Si no ve recurso, no damos reward privilegiado.
+                                # Pequeño incentivo a explorar.
+                                reward += 0.02
+
+                        else:
+                            # Depredador se queda como estaba
+                            d_now = self._norm_dist_to(sp, need)
+                            reward += 6.0 * (d_prev - d_now)
+                            reward += 1.0 * (1.0 - d_now)
                     ctx.energy_after_move[agent] = sp.total_energy
                     reward += 0.02 * (ctx.energy_after_move[agent] - prev_energy)
 
@@ -598,6 +864,14 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                 if dist_to_edge < edge_margin:
                     reward -= 0.5 * (edge_margin - dist_to_edge) / edge_margin
 
+            # Actualizar memoria post acción SIEMPRE
+            self._update_agent_memory_post_action(
+                agent=agent,
+                action=a,
+                reward=reward,
+                info=ctx.infos[agent],
+            )
+
             # guardar outputs por agente
             ctx.rewards[agent] = float(reward)
             ctx.terminations[agent] = done_term
@@ -661,7 +935,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
     def _build_obs_and_episode_metrics(self, ctx: StepContext):
         for agent in ctx.prev_agents:
             sp = self.species[self._agent_idx[agent]]
-            ctx.obs[agent] = self._get_obs(sp)
+            ctx.obs[agent] = self._get_obs(sp, agent)
 
             ctx.infos.setdefault(agent, {})
 
@@ -694,9 +968,12 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
             ctx.infos[agent]["ep_avg_food"] = float(self._ep_food_sum[agent] / ep_len)
             ctx.infos[agent]["ep_avg_water"] = float(self._ep_water_sum[agent] / ep_len)
-
             ctx.infos[agent]["ep_critical_steps"] = int(self._ep_critical_steps[agent])
             ctx.infos[agent]["ep_critical_ratio"] = float(self._ep_critical_steps[agent] / ep_len)
+
+            if ctx.terminations.get(agent, False) or ctx.truncations.get(agent, False):
+                terminal_reason = ctx.infos[agent].get("reason", "")
+                self._update_long_term_bias(agent, terminal_reason)
 
 
     def _apply_timeout_if_needed(self, ctx: StepContext):
@@ -704,6 +981,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             for a in list(ctx.alive):
                 ctx.truncations[a] = True
                 ctx.infos[a]["reason"] = "timeout"
+                self._update_long_term_bias(a, "timeout")
             ctx.alive = []
     def step(self, actions):
         ctx = self._init_step_context()
@@ -756,50 +1034,79 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
         return dx, dy, dist, 1.0
     
-    def _get_obs(self, sp: Specie) -> np.ndarray:
+    def _nearest_resource_features(
+        self,
+        sp: Specie,
+        kind: str,
+        max_radius: float | None = None,
+    ):
         """
-        Observación de 16 dimensiones:
+        Retorna (dx, dy, dist, avail) del recurso más cercano.
 
-        0-1   : food, water del agente
-        2-3   : dirección al agua más cercana
-        4-5   : dirección a la vegetación más cercana
-        6-7   : distancia al agua / vegetación
-        8-9   : disponibilidad de agua / vegetación
-        10-11 : one-hot del rol (herbívoro, depredador)
-        12-15 : entidad animal relevante más cercana
-                - depredador -> herbívoro más cercano
-                - herbívoro  -> depredador más cercano
-                (dx, dy, dist, avail)
+        kind: "water" o "veg"
+        dx, dy normalizados por ancho/alto del mapa.
+        dist normalizada.
+        avail = 1.0 si existe recurso visible dentro del radio, 0.0 si no.
         """
-        w_avail = float(self._wat_tree is not None and self.water_sources["centers"].size > 0)
-        v_avail = float(self._veg_tree is not None and self.vegetation["centers"].size > 0)
-
-        # Agua
-        if w_avail:
-            _, idx_w = self._wat_tree.query([sp.x, sp.y], k=1)
-            wx, wy = self.water_sources["centers"][idx_w]
-            dx_w = (wx - sp.x) / self.map_width
-            dy_w = (wy - sp.y) / self.map_height
-            dist_w = (dx_w**2 + dy_w**2) ** 0.5
+        if kind == "water":
+            tree = self._wat_tree
+            src = self.water_sources
         else:
-            dx_w = dy_w = 0.0
-            dist_w = 1.0
+            tree = self._veg_tree
+            src = self.vegetation
 
-        # Vegetación
-        if v_avail:
-            _, idx_v = self._veg_tree.query([sp.x, sp.y], k=1)
-            vx, vy = self.vegetation["centers"][idx_v]
-            dx_v = (vx - sp.x) / self.map_width
-            dy_v = (vy - sp.y) / self.map_height
-            dist_v = (dx_v**2 + dy_v**2) ** 0.5
-        else:
-            dx_v = dy_v = 0.0
-            dist_v = 1.0
+        if tree is None or src["centers"].size == 0:
+            return 0.0, 0.0, 1.0, 0.0
+
+        _, idx = tree.query([sp.x, sp.y], k=1)
+        rx, ry = src["centers"][idx]
+
+        real_dx = float(rx - sp.x)
+        real_dy = float(ry - sp.y)
+        real_dist = float(np.sqrt(real_dx**2 + real_dy**2))
+
+        # Si hay radio de visión y el recurso está fuera, no se detecta
+        if max_radius is not None and real_dist > max_radius:
+            return 0.0, 0.0, 1.0, 0.0
+
+        dx = real_dx / self.map_width
+        dy = real_dy / self.map_height
+        dist = float(np.sqrt(dx**2 + dy**2))
+
+        return dx, dy, dist, 1.0
+
+    def _get_obs(self, sp: Specie, agent: str) -> np.ndarray:
+        """
+        Observación de 34 dimensiones:
+        0-15  : observación base
+        16-20 : memoria de agua
+        21-25 : memoria de vegetación
+        26-29 : memoria reciente
+        30-33 : memoria larga
+        """
+        # Para herbívoros, recursos solo visibles dentro de un radio
+        resource_radius = (
+            self.herbivore_resource_vision_radius
+            if sp.role is Role.HERBIVORE
+            else None
+        )
+
+        dx_w, dy_w, dist_w, w_avail = self._nearest_resource_features(
+            sp,
+            kind="water",
+            max_radius=resource_radius,
+        )
+
+        dx_v, dy_v, dist_v, v_avail = self._nearest_resource_features(
+            sp,
+            kind="veg",
+            max_radius=resource_radius,
+        )
 
         role_h = 1.0 if sp.role is Role.HERBIVORE else 0.0
         role_p = 1.0 if sp.role is Role.PREDATOR else 0.0
 
-        # Animal relevante más cercano
+        # Animal relevante
         other_dx = other_dy = 0.0
         other_dist = 1.0
         other_avail = 0.0
@@ -820,13 +1127,47 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         f_norm = sp.food / sp.max_food
         w_norm = sp.water / sp.max_water
 
+        # --- Memoria ---
+        mem = self._agent_memory[agent]
+        ltm = self._ltm_bias[agent]
+
+        # Normalizaciones para que entren bien a la red
+        last_reward_norm = float(np.tanh(mem.last_reward / 5.0))
+        reward_ema_norm = float(np.tanh(mem.reward_ema / 5.0))
+        fail_streak_norm = float(min(1.0, mem.failed_action_streak / 5.0))
+        danger_recent_norm = float(min(1.0, mem.danger_steps_recent / 5.0))
+
         return np.array([
+            # Base 16
             f_norm, w_norm,
             dx_w, dy_w, dx_v, dy_v,
             dist_w, dist_v,
             w_avail, v_avail,
             role_h, role_p,
-            other_dx, other_dy, other_dist, other_avail
+            other_dx, other_dy, other_dist, other_avail,
+
+            # Water memory 5
+            mem.last_water_dx,
+            mem.last_water_dy,
+            mem.last_water_dist,
+            mem.water_seen,
+            mem.water_age,
+
+            # Veg memory 5
+            mem.last_veg_dx,
+            mem.last_veg_dy,
+            mem.last_veg_dist,
+            mem.veg_seen,
+            mem.veg_age,
+
+            # Recent performance 4
+            last_reward_norm,
+            reward_ema_norm,
+            fail_streak_norm,
+            danger_recent_norm,
+
+            # Long-term memory 4
+            ltm[0], ltm[1], ltm[2], ltm[3],
         ], dtype=np.float32)
 
     
