@@ -25,9 +25,17 @@ except ImportError:
     print("Pygame no disponible - visualización desactivada")
 
 
-def build_config(env_cfg: dict, num_runners: int = 4, callbacks_class=None):
+def build_config(
+    env_cfg: dict,
+    num_runners: int = 4,
+    callbacks_class=None,
+    use_lstm: bool = True,
+):
     """
     Construye y retorna la configuración PPO lista para usar.
+
+    use_lstm=True activa una política recurrente con LSTM.
+    No cambia el entorno ni las observaciones.
     """
     from ray.tune.registry import register_env
     from ray.rllib.algorithms.ppo import PPOConfig
@@ -38,7 +46,24 @@ def build_config(env_cfg: dict, num_runners: int = 4, callbacks_class=None):
         callbacks_class = PerAgentAndReasonMetrics
 
     frag = env_cfg["max_steps"]
-    total_batch = num_runners * frag
+
+    # Con LSTM conviene usar un batch más grande para que aprenda secuencias.
+    # Si lo sientes muy lento, puedes bajar 2048 a 1024.
+    if use_lstm:
+        # Con tu configuración actual:
+        # num_runners=4 y max_steps=350
+        # total_batch = 4 * 350 = 1400
+        total_batch = num_runners * frag
+
+        # Mejor que el minibatch sea compatible con el tamaño del episodio.
+        # 350 funciona bien porque coincide con max_steps.
+        minibatch = frag
+
+        num_epochs = 2
+    else:
+        total_batch = num_runners * frag
+        minibatch = 200
+        num_epochs = 2
 
     register_env(
         "multi_eco",
@@ -56,7 +81,9 @@ def build_config(env_cfg: dict, num_runners: int = 4, callbacks_class=None):
                 "herb": PolicySpec(),
             },
             policy_mapping_fn=lambda agent_id, *a, **k: (
-                "pred" if int(agent_id.split("_")[1]) < env_cfg["n_predators"] else "herb"
+                "pred"
+                if int(agent_id.split("_")[1]) < env_cfg["n_predators"]
+                else "herb"
             ),
         )
     )
@@ -65,7 +92,8 @@ def build_config(env_cfg: dict, num_runners: int = 4, callbacks_class=None):
         enable_rl_module_and_learner=False,
         enable_env_runner_and_connector_v2=False
     )
-    config = config.resources(num_gpus=0)
+
+    config = config.resources(num_gpus=1)
 
     try:
         config = config.rollouts(batch_mode="truncate_episodes")
@@ -78,35 +106,111 @@ def build_config(env_cfg: dict, num_runners: int = 4, callbacks_class=None):
         sample_timeout_s=300
     )
 
+    # Configuración del modelo.
+    # La LSTM aprende dependencias temporales dentro del episodio.
+    model_cfg = {
+        "fcnet_hiddens": [64, 64],
+        "fcnet_activation": "tanh",
+
+        "use_lstm": use_lstm,
+        "lstm_cell_size": 64,
+        "max_seq_len": 16,
+
+        "lstm_use_prev_action": False,
+        "lstm_use_prev_reward": False,
+        "vf_share_layers": False,
+    }
+
     try:
         config = config.training(
             train_batch_size=total_batch,
-            minibatch_size=200,
-            num_epochs=2,
+            minibatch_size=minibatch,
+            num_epochs=num_epochs,
             lr=3e-4,
             gamma=0.99,
             lambda_=0.95,
             clip_param=0.2,
             vf_clip_param=10.0,
             grad_clip=0.5,
-            entropy_coeff=0.01
+            entropy_coeff=0.01,
+            model=model_cfg,
         )
     except TypeError:
         config = config.training(
             train_batch_size=total_batch,
-            sgd_minibatch_size=200,
-            num_sgd_iter=2,
+            sgd_minibatch_size=minibatch,
+            num_sgd_iter=num_epochs,
             lr=3e-4,
             gamma=0.99,
             lambda_=0.95,
             clip_param=0.2,
             vf_clip_param=10.0,
             grad_clip=0.5,
-            entropy_coeff=0.01
+            entropy_coeff=0.01,
+            model=model_cfg,
         )
 
     return config
+def get_policy_id_for_agent(agent_id: str, env_cfg: dict) -> str:
+    """
+    Devuelve la política correspondiente al agente.
+    """
+    idx = int(agent_id.split("_")[1])
+    return "pred" if idx < env_cfg["n_predators"] else "herb"
 
+
+def init_agent_lstm_states(trainer, agents, env_cfg: dict) -> dict:
+    """
+    Crea el estado inicial de LSTM para cada agente.
+
+    Aunque varios agentes compartan la misma política,
+    cada agente necesita su propio estado recurrente.
+    """
+    states = {}
+
+    for agent_id in agents:
+        policy_id = get_policy_id_for_agent(agent_id, env_cfg)
+        policy = trainer.get_policy(policy_id)
+        states[agent_id] = list(policy.get_initial_state())
+
+    return states
+
+
+def compute_action_with_lstm_state(
+    trainer,
+    agent_id: str,
+    agent_obs,
+    env_cfg: dict,
+    agent_states: dict,
+    explore: bool = False,
+):
+    """
+    Calcula una acción manteniendo el estado recurrente de cada agente.
+
+    Funciona tanto si la política tiene LSTM como si no.
+    """
+    policy_id = get_policy_id_for_agent(agent_id, env_cfg)
+    policy = trainer.get_policy(policy_id)
+
+    state_in = agent_states.get(agent_id)
+
+    if state_in is None:
+        state_in = list(policy.get_initial_state())
+
+    out = policy.compute_single_action(
+        agent_obs,
+        state=state_in,
+        explore=explore,
+    )
+
+    if isinstance(out, tuple):
+        action, state_out, _ = out
+        agent_states[agent_id] = state_out
+    else:
+        action = out
+        agent_states[agent_id] = state_in
+
+    return action
 
 def get_monitor_header(n_agents: int):
     return (
@@ -209,25 +313,33 @@ def build_monitor_row(result: dict, iteration: int, n_agents: int):
 def run_policy_episode(trainer, env_cfg: dict, step_callback=None):
     """
     Ejecuta un episodio usando las políticas entrenadas.
-    Si step_callback retorna False, se detiene la visualización.
+    Compatible con políticas normales y políticas con LSTM.
     """
     env = MultiAgentEcosystem(**env_cfg)
     obs, _ = env.reset()
+
+    agent_states = init_agent_lstm_states(
+        trainer=trainer,
+        agents=env.possible_agents,
+        env_cfg=env_cfg,
+    )
 
     for step in range(env_cfg["max_steps"]):
         if not obs:
             break
 
         actions = {}
+
         for agent_id, agent_obs in obs.items():
             try:
-                idx = int(agent_id.split("_")[1])
-                policy_id = "pred" if idx < env_cfg["n_predators"] else "herb"
-                out = trainer.get_policy(policy_id).compute_single_action(
-                    agent_obs,
-                    explore=False
+                actions[agent_id] = compute_action_with_lstm_state(
+                    trainer=trainer,
+                    agent_id=agent_id,
+                    agent_obs=agent_obs,
+                    env_cfg=env_cfg,
+                    agent_states=agent_states,
+                    explore=False,
                 )
-                actions[agent_id] = out[0] if isinstance(out, tuple) else out
             except Exception:
                 actions[agent_id] = env.action_space(agent_id).sample()
 
@@ -242,12 +354,12 @@ def run_policy_episode(trainer, env_cfg: dict, step_callback=None):
                 truncations=truncations,
                 infos=infos,
             )
+
             if should_continue is False:
                 break
 
         if all(terminations.values()) or all(truncations.values()):
             break
-
 
 def main(enable_visualization: bool = False):
     ray.init(ignore_reinit_error=True)
