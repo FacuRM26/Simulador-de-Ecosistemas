@@ -13,11 +13,11 @@ import ray
 from ..environment.multi_agent_ecosystem import MultiAgentEcosystem
 from .callbacks import PerAgentAndReasonMetrics
 
-from ecosystem_simulator.config import DEFAULT_ENV_CFG, DEFAULT_NUM_RUNNERS, DEFAULT_NUM_ITERS
+from ecosystem_simulator.config import ENV_CFG, NUM_RUNNERS, NUM_ITERS
 
-NUM_ITERS       = DEFAULT_NUM_ITERS         
+#NUM_ITERS       = DEFAULT_NUM_ITERS         
 VIS_START_FRAC  = 0.7         # empezar al 50% del entrenamiento
-VIS_INTERVAL    = 10  
+VIS_INTERVAL    = 10 
 
 try:
     from ..utils.pygame_visualizer import EcosystemVisualizer

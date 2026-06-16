@@ -33,16 +33,30 @@ from ecosystem_simulator.server.api_server import (
     serialize_ecosystem_state,
 )
 from ecosystem_simulator.utils.visualization import analyze_training_results
-from ecosystem_simulator.config import DEFAULT_ENV_CFG, DEFAULT_NUM_RUNNERS, DEFAULT_NUM_ITERS
+from ecosystem_simulator.config import ENV_CFG, NUM_RUNNERS, NUM_ITERS, VIS_START_IT
 
 
 # ─────────────────────────────────────────────
 #  Configuración central
 # ─────────────────────────────────────────────
-ENV_CFG = DEFAULT_ENV_CFG.copy()
-NUM_RUNNERS  = DEFAULT_NUM_RUNNERS
-NUM_ITERS    = DEFAULT_NUM_ITERS
-VIS_START_IT = 5   # Iteración a partir de la cual se envía estado a Godot
+#ENV_CFG = DEFAULT_ENV_CFG.copy()
+#NUM_RUNNERS  = DEFAULT_NUM_RUNNERS
+#NUM_ITERS    = DEFAULT_NUM_ITERS
+#VIS_START_IT = DEFAULT_VIS_START # Iteración a partir de la cual se envía estado a Godot
+
+
+def _force_cpu_resources(config):
+    try:
+        return config.resources(
+            num_gpus=0,
+            num_gpus_per_learner=0,
+            num_gpus_per_env_runner=0,
+        )
+    except TypeError:
+        try:
+            return config.resources(num_gpus=0)
+        except TypeError:
+            return config
 
 
 # ─────────────────────────────────────────────
@@ -114,6 +128,7 @@ def train_with_godot() -> None:
         num_runners=NUM_RUNNERS,
         callbacks_class=PerAgentAndReasonMetrics,
     )
+    config = _force_cpu_resources(config)
     trainer = config.build()
 
     n_agents = ENV_CFG["n_agents"]
