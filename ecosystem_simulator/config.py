@@ -8,5 +8,8 @@ ENV_CFG = {
     "n_predators": 2,
 }
 NUM_RUNNERS = 4
-NUM_ITERS = 50
-VIS_START_IT = 40 # Iteración a partir de la cual se envía estado a Godot
+NUM_ITERS = 500
+# Iteración a partir de la cual se envía estado a Godot.
+# Ponlo bajo (p.ej. 30) para ir viendo cómo aprenden desde temprano;
+# súbelo (p.ej. 400) solo para una demo final ya entrenada.
+VIS_START_IT = 450

@@ -37,7 +37,7 @@ class Specie:
     )
 
     # Tamaño del agente en píxeles (usado para colisiones y límites del mapa)
-    AGENT_SIZE = 20
+    AGENT_SIZE = 30
 
     # Diccionario de vectores de dirección para el movimiento
     # Cada dirección mapea a un vector (dx, dy) que indica el cambio en x e y
@@ -92,8 +92,8 @@ class Specie:
         Reduce los recursos del agente debido al metabolismo natural.
         
         Args:
-            rate: Tasa de consumo metabólico (cantidad reducida por paso)
-            Por defecto 0.3 unidades por recurso
+            rate: Tasa de consumo metabólico (cantidad reducida por paso).
+            El entorno lo llama con BASE_COST (0.5) en cada acción.
         """
         # Reducir comida, asegurando que no sea negativa
         self.food  = max(0.0, self.food - rate)

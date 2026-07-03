@@ -63,9 +63,12 @@ DIRECTIONS = ["north", "south", "east", "west"]
 ACT_EAT    = 4
 ACT_DRINK  = 5
 ACT_ATTACK = 6
-BASE_STEP = 2.0 
-BASE_COST = 0.50 
-MOVE_EXTRA = 0.05 
+BASE_STEP = 2.0
+# BASE_COST drena food Y water en cada acción. Con 0.50 los agentes morían de
+# hambre/sed ~paso 130 de 350 antes de aprender a comer de forma sostenida.
+# 0.35 les da margen para que la política aprenda a consumir a tiempo.
+BASE_COST = 0.35
+MOVE_EXTRA = 0.05
 PRED_ATTACK_CD = 2  # pasos de cooldown después de atacar
 class MultiAgentEcosystem(ParallelEnv, Ecosystem):
     """
@@ -100,8 +103,8 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         map_height: int = 600,
         max_steps: int = 350,
         gamma: float = 0.995,
-         n_predators: int = 1,
-        herbivore_vision_radius: float | None = None,
+        n_predators: int = 1,
+        herbivore_vision_radius: float | None = 220.0,
         herbivore_resource_vision_radius: float | None = 140.0,
     ):
         """
@@ -244,13 +247,17 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
             # stats por rol (ejemplo razonable)
             if role is Role.HERBIVORE:
-                speed = 2.1
+                # La presa es LIGERAMENTE más rápida que el depredador para que
+                # huir sea físicamente posible (antes 2.1 vs 3.0 => imposible
+                # escapar => nunca aprendían a huir). El depredador compensa con
+                # su alcance de ataque y el enorme reward por matar.
+                speed = 3.0
                 hp = 100.0
                 attack_range = 0.0
                 attack_cost = 0.0
                 max_food, max_water = 100.0, 100.0
             else:
-                speed = 3.0           # un poco más rápido que la presa
+                speed = 2.9           # un pelín más lento que la presa
                 hp = 120.0
                 attack_range = 45.0
                 attack_cost = 0.5
@@ -659,6 +666,21 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             if sp.attack_cd > 0:
                 sp.attack_cd -= 1
 
+            # Si la presa ya murió este mismo paso (un depredador se procesa antes
+            # y la mató), no dejamos que "actúe" estando muerta.
+            if not sp.alive:
+                ctx.terminations[agent] = True
+                ctx.truncations[agent] = False
+                ctx.rewards[agent] = float(reward)
+                role_str = "PREDATOR" if sp.role is Role.PREDATOR else "HERBIVORE"
+                ctx.infos[agent] = {
+                    **ctx.infos.get(agent, {}),
+                    "reason": "predation",
+                    "role": role_str,
+                    "action_mask": self._action_mask(sp),
+                }
+                continue
+
             if agent in actions:
                 prev_energy = sp.total_energy
 
@@ -711,7 +733,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
                     moved_dist = abs(sp.x - prev_x) + abs(sp.y - prev_y)
                     if moved_dist < 1e-3:
-                        reward -= 0.3
+                        reward -= 0.1
 
                     # progreso hacia objetivo
                     if need == "prey":
@@ -745,8 +767,11 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
                             if resource_visible_now > 0.0:
                                 d_now = d_now_visible
-                                reward += 6.0 * (d_prev - d_now)
-                                reward += 1.0 * (1.0 - d_now)
+                                # Progreso (potential-based). Coeficiente bajado de
+                                # 6.0 a 3.0: con 6.0 el agente farmeaba el reward de
+                                # ACERCARSE sin llegar a comer. Ahora acercarse es un
+                                # incentivo suave y COMER (abajo) domina claramente.
+                                reward += 3.0 * (d_prev - d_now)
                             else:
                                 # Si no ve recurso, no damos reward privilegiado.
                                 # Pequeño incentivo a explorar.
@@ -756,7 +781,6 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                             # Depredador se queda como estaba
                             d_now = self._norm_dist_to(sp, need)
                             reward += 6.0 * (d_prev - d_now)
-                            reward += 1.0 * (1.0 - d_now)
                     ctx.energy_after_move[agent] = sp.total_energy
                     reward += 0.02 * (ctx.energy_after_move[agent] - prev_energy)
 
@@ -773,7 +797,12 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                         ctx.infos[agent]["eat_success"] = int(ate)
                         if ate:
                             self._ep_eat[agent] += 1
-                        reward += 1.0 if ate else -0.1
+                            # Comer vale más cuando hay hambre (f_def calculado arriba).
+                            # Subido de (3+5) a (5+8): tras bajar el reward de
+                            # aproximación, comer debe ser claramente la mejor jugada.
+                            reward += 5.0 + 8.0 * f_def
+                        else:
+                            reward -= 0.2  # intentar comer sin recurso cuesta un poco
 
                 # --- beber ---
                 elif a == ACT_DRINK:
@@ -782,7 +811,11 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                     ctx.infos[agent]["drink_success"] = int(drank)
                     if drank:
                         self._ep_drink[agent] += 1
-                    reward += 0.5 if drank else -0.1
+                        # Beber escalado por sed (w_def calculado arriba).
+                        # Subido de (2+4) a (4+6) por la misma razón que comer.
+                        reward += 4.0 + 6.0 * w_def
+                    else:
+                        reward -= 0.2
 
                 # --- atacar ---
                 elif a == ACT_ATTACK:
@@ -848,10 +881,13 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                 min_norm = min(f_norm, w_norm)
 
                 reward += 0.02 * min_norm
+                # Penalizaciones suaves: solo marcan tendencia, no dominan el retorno.
+                # (Antes eran -0.5 / -1.0 por paso y hundían el retorno a ~-60,
+                #  impidiendo que la función de valor aprendiera.)
                 if min_norm < 0.15:
-                    reward -= 0.5
+                    reward -= 0.1
                 if min_norm < 0.08:
-                    reward -= 1.0
+                    reward -= 0.2
 
                 # penalización por bordes
                 dist_left   = sp.x / self.map_width
@@ -862,7 +898,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
                 edge_margin = 0.15
                 if dist_to_edge < edge_margin:
-                    reward -= 0.5 * (edge_margin - dist_to_edge) / edge_margin
+                    reward -= 0.15 * (edge_margin - dist_to_edge) / edge_margin
 
             # Actualizar memoria post acción SIEMPRE
             self._update_agent_memory_post_action(
@@ -1069,9 +1105,14 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         if max_radius is not None and real_dist > max_radius:
             return 0.0, 0.0, 1.0, 0.0
 
+        # dx, dy se dejan por eje (para dar dirección a la red), pero la
+        # distancia usada en el shaping se normaliza por la DIAGONAL del mapa
+        # para que sea isotrópica (moverse la misma distancia física vale igual
+        # en cualquier dirección).
+        diag = float(np.sqrt(self.map_width**2 + self.map_height**2))
         dx = real_dx / self.map_width
         dy = real_dy / self.map_height
-        dist = float(np.sqrt(dx**2 + dy**2))
+        dist = real_dist / diag
 
         return dx, dy, dist, 1.0
 

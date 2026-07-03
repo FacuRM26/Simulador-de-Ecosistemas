@@ -5,7 +5,7 @@ const UPDATE_INTERVAL = 0.07
 
 const MAP_WIDTH = 800
 const MAP_HEIGHT = 600
-const AGENT_SIZE_PX = 50  # Debe coincidir con Specie.AGENT_SIZE en Python
+const AGENT_SIZE_PX = 30  # Debe coincidir con Specie.AGENT_SIZE en Python
 
 var agent_scene = preload("res://Agent.tscn")
 var food_scene = preload("res://Food.tscn")

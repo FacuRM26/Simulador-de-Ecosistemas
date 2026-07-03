@@ -94,7 +94,11 @@ def _run_godot_episode(trainer, env_cfg: dict, iteration: int) -> None:
                     agent_states=agent_states,
                     explore=False,
                 )
-            except Exception:
+            except Exception as e:
+                # IMPORTANTE: si esto se dispara, la política entrenada NO se está
+                # usando y el agente actúa al azar (por eso "no comería"). Lo
+                # mostramos en vez de ocultarlo.
+                print(f"[Godot] fallo policy {agent_id}: {type(e).__name__}: {e}")
                 actions[agent_id] = viz_env.action_space(agent_id).sample()
 
         obs, rewards, terminations, truncations, _ = viz_env.step(actions)

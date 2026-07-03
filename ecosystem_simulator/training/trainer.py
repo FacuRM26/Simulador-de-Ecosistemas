@@ -31,13 +31,15 @@ def build_config(
     env_cfg: dict,
     num_runners: int = 4,
     callbacks_class=None,
-    use_lstm: bool = True,
+    use_lstm: bool = False,
+    num_gpus: int = 0,
 ):
     """
     Construye y retorna la configuración PPO lista para usar.
 
-    use_lstm=True activa una política recurrente con LSTM.
-    No cambia el entorno ni las observaciones.
+    use_lstm=False por defecto: la observación YA incluye features de memoria
+    (índices 16-33), así que una MLP es suficiente y aprende más rápido/estable
+    que una política recurrente. Puedes activar la LSTM para experimentar.
     """
     from ray.tune.registry import register_env
     from ray.rllib.algorithms.ppo import PPOConfig
@@ -49,23 +51,17 @@ def build_config(
 
     frag = env_cfg["max_steps"]
 
-    # Con LSTM conviene usar un batch más grande para que aprenda secuencias.
-    # Si lo sientes muy lento, puedes bajar 2048 a 1024.
+    # Batch total = num_runners * frag (p.ej. 4 * 350 = 1400).
+    total_batch = num_runners * frag
+
     if use_lstm:
-        # Con tu configuración actual:
-        # num_runners=4 y max_steps=350
-        # total_batch = 4 * 350 = 1400
-        total_batch = num_runners * frag
-
-        # Mejor que el minibatch sea compatible con el tamaño del episodio.
-        # 350 funciona bien porque coincide con max_steps.
+        # Con LSTM el minibatch debe respetar secuencias completas.
         minibatch = frag
-
-        num_epochs = 2
+        num_epochs = 8
     else:
-        total_batch = num_runners * frag
-        minibatch = 200
-        num_epochs = 2
+        # MLP: minibatch más pequeño => más pasos de SGD por iteración.
+        minibatch = 256
+        num_epochs = 10
 
     register_env(
         "multi_eco",
@@ -95,7 +91,7 @@ def build_config(
         enable_env_runner_and_connector_v2=False
     )
 
-    config = config.resources(num_gpus=1)
+    config = config.resources(num_gpus=num_gpus)
 
     try:
         config = config.rollouts(batch_mode="truncate_episodes")
@@ -123,33 +119,36 @@ def build_config(
         "vf_share_layers": False,
     }
 
+    # NOTA: estás en el old API stack (enable_rl_module_and_learner=False),
+    # cuyos nombres canónicos son num_sgd_iter / sgd_minibatch_size.
+    # vf_clip_param=10 era el gran problema: con retornos de episodio de decenas
+    # (o cientos), la función de valor quedaba recortada y no podía ajustar la
+    # línea base => las ventajas (GAE) salían basura => la política no aprendía.
+    train_kwargs = dict(
+        train_batch_size=total_batch,
+        lr=3e-4,
+        gamma=0.99,
+        lambda_=0.95,
+        clip_param=0.2,
+        vf_clip_param=50.0,   # acorde a la escala de recompensa (antes 10)
+        grad_clip=1.0,        # menos agresivo que 0.5
+        entropy_coeff=0.01,
+        model=model_cfg,
+    )
+
     try:
+        # Old API stack (el tuyo)
         config = config.training(
-            train_batch_size=total_batch,
-            minibatch_size=minibatch,
-            num_epochs=num_epochs,
-            lr=3e-4,
-            gamma=0.99,
-            lambda_=0.95,
-            clip_param=0.2,
-            vf_clip_param=10.0,
-            grad_clip=0.5,
-            entropy_coeff=0.01,
-            model=model_cfg,
+            num_sgd_iter=num_epochs,
+            sgd_minibatch_size=minibatch,
+            **train_kwargs,
         )
     except TypeError:
+        # Fallback para versiones nuevas de RLlib
         config = config.training(
-            train_batch_size=total_batch,
-            sgd_minibatch_size=minibatch,
-            num_sgd_iter=num_epochs,
-            lr=3e-4,
-            gamma=0.99,
-            lambda_=0.95,
-            clip_param=0.2,
-            vf_clip_param=10.0,
-            grad_clip=0.5,
-            entropy_coeff=0.01,
-            model=model_cfg,
+            num_epochs=num_epochs,
+            minibatch_size=minibatch,
+            **train_kwargs,
         )
 
     return config
@@ -367,16 +366,12 @@ def main(enable_visualization: bool = False):
     ray.init(ignore_reinit_error=True)
 
     # --- Configuración del entorno ---
-    ENV_CFG = DEFAULT_ENV_CFG.copy()
-    n_agents = ENV_CFG["n_predators"] + ENV_CFG["n_herbivores"]
-
-    # Parámetros de entrenamiento
-    NUM_RUNNERS  = DEFAULT_NUM_RUNNERS
-    FRAG = ENV_CFG["max_steps"]
-    TOTAL_BATCH = NUM_RUNNERS * FRAG
+    # Copia local para no mutar el global importado.
+    env_cfg = dict(ENV_CFG)
+    n_agents = env_cfg["n_agents"]
 
     config = build_config(
-        env_cfg=ENV_CFG,
+        env_cfg=env_cfg,
         num_runners=NUM_RUNNERS,
         callbacks_class=PerAgentAndReasonMetrics,
     )
@@ -387,8 +382,8 @@ def main(enable_visualization: bool = False):
     visualizer = None
     if enable_visualization and HAS_PYGAME:
         visualizer = EcosystemVisualizer(
-            map_width=ENV_CFG["map_width"],
-            map_height=ENV_CFG["map_height"]
+            map_width=env_cfg["map_width"],
+            map_height=env_cfg["map_height"]
         )
         print("Visualización en tiempo real activada")
 
@@ -427,7 +422,7 @@ def main(enable_visualization: bool = False):
                                 env, env.species, step, i, rewards, metrics
                             )
 
-                        run_policy_episode(trainer, ENV_CFG, step_callback=render_step)
+                        run_policy_episode(trainer, env_cfg, step_callback=render_step)
                         print("Visualización completada")
 
                     except Exception as e:
