@@ -70,6 +70,34 @@ BASE_STEP = 2.0
 BASE_COST = 0.35
 MOVE_EXTRA = 0.05
 PRED_ATTACK_CD = 2  # pasos de cooldown después de atacar
+
+# Pesos de recompensa ajustables por el LLM (Fase 2: reward shaping).
+# Cada peso MULTIPLICA un término de la recompensa. El default 1.0 reproduce
+# EXACTAMENTE el comportamiento base, así que sin shaping nada cambia. El LLM
+# los sube/baja (acotado) entre iteraciones para reorientar el aprendizaje.
+#
+# POR ROL: los términos compartidos (beber, homeostasis, explorar) tienen versión
+# herbívoro y depredador separadas, para que el LLM pueda equilibrar ambos roles
+# de forma independiente (antes un solo 'drink' global forzaba a los depredadores
+# a sobre-beber cuando subía el del herbívoro, y morían de hambre).
+DEFAULT_REWARD_WEIGHTS = {
+    # Herbívoro
+    "eat":          1.0,  # comer vegetación (solo herbívoro)
+    "escape":       1.0,  # huir de depredadores (solo herbívoro)
+    "drink_herb":   1.0,  # beber (herbívoro)
+    "homeo_herb":   1.0,  # homeostasis / supervivencia (herbívoro)
+    "explore_herb": 1.0,  # acercarse a recursos con propósito (herbívoro)
+    # Depredador
+    "hunt":         1.0,  # golpear/matar presa (solo depredador)
+    "drink_pred":   1.0,  # beber (depredador)
+    "homeo_pred":   1.0,  # homeostasis / supervivencia (depredador)
+    "explore_pred": 1.0,  # acercarse a presa/agua con propósito (depredador)
+}
+# Rango seguro: el LLM no puede poner pesos absurdos que destruyan el balance.
+REWARD_WEIGHT_MIN = 0.5
+REWARD_WEIGHT_MAX = 2.0
+
+
 class MultiAgentEcosystem(ParallelEnv, Ecosystem):
     """
     Entorno multi-agente que simula un ecosistema con especies que necesitan recursos.
@@ -105,7 +133,12 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         gamma: float = 0.995,
         n_predators: int = 1,
         herbivore_vision_radius: float | None = 220.0,
-        herbivore_resource_vision_radius: float | None = 140.0,
+        # Visión de recursos subida de 140 a 240: con 140 la comida/agua solía
+        # quedar FUERA de la vista (parches separados ~180px) y el herbívoro
+        # deambulaba a ciegas sin señal de hacia dónde ir => casi no comía/bebía
+        # y moría de hambre/sed. Un grazer debe ver su comida al menos tan lejos
+        # como ve a los depredadores.
+        herbivore_resource_vision_radius: float | None = 240.0,
     ):
         """
         Inicializa el entorno multi-agente con agentes y recursos.
@@ -232,7 +265,33 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         # Umbrales para bonificación por homeostasis (mantener recursos altos)
         self.success_thr = 0.90     # 90% de las reservas máximas
         self.success_hold = 25      # Mantenerlo durante 25 pasos seguidos
-    
+
+        # Pesos de recompensa (Fase 2: los ajusta el LLM entre iteraciones).
+        # Persisten entre episodios; reset() NO los toca.
+        self.reward_weights = dict(DEFAULT_REWARD_WEIGHTS)
+
+    def _rw_role(self, base: str, sp: Specie) -> float:
+        """Peso por rol para términos compartidos (base = 'drink'|'homeo'|'explore')."""
+        suffix = "pred" if sp.role is Role.PREDATOR else "herb"
+        return self.reward_weights[f"{base}_{suffix}"]
+
+    def set_reward_weights(self, weights: dict) -> None:
+        """
+        Actualiza los pesos de recompensa (llamado desde los env runners vía
+        foreach_env). Ignora claves desconocidas y acota cada valor al rango
+        seguro para que el LLM no pueda destruir el balance.
+        """
+        if not weights:
+            return
+        for k, v in weights.items():
+            if k in self.reward_weights:
+                try:
+                    self.reward_weights[k] = float(
+                        max(REWARD_WEIGHT_MIN, min(REWARD_WEIGHT_MAX, v))
+                    )
+                except (TypeError, ValueError):
+                    pass
+
     def _reset_species(self):
         spawn_xy = self._sample_spawn_positions(
             self.n_agents, min_dist=80.0, avoid_resources=True
@@ -247,22 +306,37 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
             # stats por rol (ejemplo razonable)
             if role is Role.HERBIVORE:
-                # Misma velocidad que el depredador: una presa que huye a tiempo
-                # (la detecta con su radio de visión de 220) mantiene la distancia
-                # y escapa; una presa distraída comiendo/bebiendo (no se mueve ese
-                # paso) es alcanzada. Antes la presa era MÁS rápida (3.0 vs 2.9) y
-                # el depredador no podía cazar nada => se moría de hambre.
-                speed = 3.0
+                # Ventaja de velocidad PEQUEÑA para la presa (3.1 vs 2.9). A igual
+                # velocidad, una presa que huye solo mantenía la distancia => el
+                # reward de escape (8*Δdist) era ~0 y nunca aprendía a huir. Con esta
+                # ventaja, huir abre distancia de a poco y le permite salir de la zona
+                # de peligro, así que huir SÍ rinde. El depredador igual la alcanza
+                # cuando la presa se detiene a comer/beber (no se mueve ese paso).
+                speed = 3.1
                 hp = 100.0
                 attack_range = 0.0
                 attack_cost = 0.0
                 max_food, max_water = 100.0, 100.0
+                # Los vegetales se digieren rápido: desgaste de comida normal.
+                food_metab_factor = 1.0
             else:
-                speed = 3.0           # igual que la presa (ver nota arriba)
+                speed = 2.9           # un pelín más lento que la presa (ver nota arriba)
                 hp = 120.0
-                attack_range = 55.0   # un poco más de alcance para que cazar rinda
+                # Alcance 52: 55 hacía la caza demasiado fácil (exterminio, 81%);
+                # 40 la volvía imposible (morían de hambre). 48 balanceaba, pero al
+                # mejorar la visión de los herbívoros (más evasivos y sanos) la caza
+                # se volvió a poner difícil, así que subimos a 52 para compensar. El
+                # exterminio no vuelve porque el reward de matar es puro-hambre (un
+                # depredador lleno casi no gana cazando).
+                attack_range = 52.0
                 attack_cost = 0.5
                 max_food, max_water = 100.0, 100.0
+                # La CARNE dura MUCHO más que los vegetales (una comida grande llena
+                # por largo rato): el depredador gasta su comida a 0.5x, así se
+                # mantiene lleno más tiempo, su hambre (f_def) baja lento y NO tiene
+                # urgencia de cazar de más. Antes 0.7 los dejaba sobrealimentados
+                # (avg_food 0.74) pero igual sobre-cazaban (5.4 kills) y exterminaban.
+                food_metab_factor = 0.5
 
             x, y = spawn_xy[i]
 
@@ -280,6 +354,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                 speed=speed,
                 attack_range=attack_range,
                 attack_cost=attack_cost,
+                food_metab_factor=food_metab_factor,
             )
             s.attack_cd = 0  # arranca sin cooldown
             self.species.append(s)
@@ -739,7 +814,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                     # progreso hacia objetivo
                     if need == "prey":
                         d_now = self._norm_dist_to_prey(sp)
-                        reward += 6.0 * (d_prev - d_now)
+                        reward += self._rw_role("explore", sp) * 6.0 * (d_prev - d_now)
 
                         diag = (self.map_width**2 + self.map_height**2) ** 0.5
                         in_range = 1.0 if d_now <= (sp.attack_range / diag) else 0.0
@@ -752,7 +827,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                         d_now = self._norm_dist_to_predator(sp)
 
                         # Recompensar aumentar distancia al depredador
-                        reward += 8.0 * (d_now - d_prev)
+                        reward += self.reward_weights["escape"] * 8.0 * (d_now - d_prev)
 
                         # Pequeña penalización por quedarse muy cerca
                         if d_now < 0.12:
@@ -775,7 +850,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                                 # 6.0 a 3.0: con 6.0 el agente farmeaba el reward de
                                 # ACERCARSE sin llegar a comer. Ahora acercarse es un
                                 # incentivo suave y COMER (abajo) domina claramente.
-                                reward += 3.0 * (d_prev - d_now)
+                                reward += self._rw_role("explore", sp) * 3.0 * (d_prev - d_now)
                             else:
                                 # Si no ve recurso, no damos reward privilegiado.
                                 # Pequeño incentivo a explorar.
@@ -784,7 +859,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                         else:
                             # Depredador se queda como estaba
                             d_now = self._norm_dist_to(sp, need)
-                            reward += 6.0 * (d_prev - d_now)
+                            reward += self._rw_role("explore", sp) * 6.0 * (d_prev - d_now)
                     ctx.energy_after_move[agent] = sp.total_energy
                     reward += 0.02 * (ctx.energy_after_move[agent] - prev_energy)
 
@@ -805,7 +880,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                             # lo que permitía farmear (comer lleno seguía dando +2).
                             # Ahora comer con la comida llena da ~0, así que el agente
                             # solo come cuando de verdad tiene hambre.
-                            reward += 9.0 * f_def
+                            reward += self.reward_weights["eat"] * 9.0 * f_def
                         else:
                             reward -= 0.2  # intentar comer sin recurso cuesta un poco
 
@@ -819,7 +894,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                         # SIN componente fijo: puro déficit (w_def). Beber con el agua
                         # llena da ~0, así que el depredador ya no puede farmear agua
                         # (era lo que lo hacía llegar a 0.89 de agua y morir de hambre).
-                        reward += 9.0 * w_def
+                        reward += self._rw_role("drink", sp) * 9.0 * w_def
                     else:
                         reward -= 0.2
 
@@ -848,13 +923,15 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                             if outcome == "miss":
                                 reward -= 0.1
                             elif outcome == "hit":
-                                # Escalado por hambre: cazar es la ÚNICA fuente de
-                                # comida del depredador, así que debe superar de lejos
-                                # el reward fiable de beber cuando tiene hambre.
-                                reward += (10.0 + 10.0 * f_def) * thirst_gate
+                                # SIN componente fijo (puro hambre f_def), igual que
+                                # comer/beber. El fijo (antes 10+10) dejaba farmear
+                                # kills estando lleno => sobre-caza y exterminio.
+                                reward += self.reward_weights["hunt"] * (20.0 * f_def) * thirst_gate
                                 sp.attack_cd = PRED_ATTACK_CD
                             elif outcome == "kill":
-                                reward += (25.0 + 30.0 * f_def) * thirst_gate
+                                # Puro hambre: un depredador lleno (f_def bajo) casi no
+                                # gana por matar, así que caza solo cuando lo necesita.
+                                reward += self.reward_weights["hunt"] * (50.0 * f_def) * thirst_gate
                                 sp.attack_cd = PRED_ATTACK_CD
 
                         ctx.infos[agent]["attack_outcome"] = outcome
@@ -867,7 +944,14 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                             self._ep_attack_kill[agent] += 1
 
                     else:
-                        reward -= 0.1
+                        # Herbívoro atacando: acción inútil (no puede) que lo deja
+                        # quieto ese paso. La máscara de acción no se aplica en este
+                        # stack de RLlib. Penalizamos IGUAL que un comer/beber fallido
+                        # (-0.2): así ninguna acción quieta es un "refugio" más barato
+                        # que otra. Como comer/beber SÍ pueden tener éxito y atacar
+                        # nunca, la política prefiere las útiles sin spamear una sola.
+                        # (Con -0.5 la masa se iba toda a COMER-en-el-aire.)
+                        reward -= 0.2
 
                 # muerte por recursos
                 if (sp.food <= 0) or (sp.water <= 0):
@@ -903,7 +987,7 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
                 # reward. Solo subir el cuello de botella (el recurso bajo) rinde.
                 # Esto obliga a equilibrar comida Y agua = sobrevivir, en vez de
                 # farmear un solo recurso.
-                reward += 0.4 * min_norm
+                reward += self._rw_role("homeo", sp) * 0.4 * min_norm
                 # Penalizaciones por estar en zona crítica (marcan peligro real).
                 if min_norm < 0.15:
                     reward -= 0.1

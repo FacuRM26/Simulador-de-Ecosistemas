@@ -33,7 +33,8 @@ class Specie:
         "map_width", "map_height",
         "role", "alive",
         "hp", "speed",
-        "attack_range", "attack_cost", "attack_cd"
+        "attack_range", "attack_cost", "attack_cd",
+        "food_metab_factor",
     )
 
     # Tamaño del agente en píxeles (usado para colisiones y límites del mapa)
@@ -51,13 +52,16 @@ class Specie:
 
     def __init__(self, food, water, x=0, y=0, max_food=100, max_water=100,
                  map_width=800, map_height=600, role=Role.HERBIVORE,
-                 hp=100, speed=1.0, attack_range=25.0, attack_cost=2.0):
+                 hp=100, speed=1.0, attack_range=25.0, attack_cost=2.0,
+                 food_metab_factor=1.0):
         # Parámetros estáticos del entorno
         self.max_food   = max_food
         self.max_water  = max_water
         self.map_width  = map_width
         self.map_height = map_height
         self.role = role
+        # Factor de desgaste de comida: <1.0 = la comida (p.ej. carne) dura más.
+        self.food_metab_factor = food_metab_factor
         # Estado inicial (se asegura que food & water no superen sus máximos)
         self.food = max(0.0, min(food, max_food))
         self.water = max(0.0, min(water, max_water))
@@ -95,9 +99,10 @@ class Specie:
             rate: Tasa de consumo metabólico (cantidad reducida por paso).
             El entorno lo llama con BASE_COST (0.5) en cada acción.
         """
-        # Reducir comida, asegurando que no sea negativa
-        self.food  = max(0.0, self.food - rate)
-        # Reducir agua, asegurando que no sea negativa
+        # Reducir comida (con factor por rol: la carne del depredador dura más),
+        # asegurando que no sea negativa.
+        self.food  = max(0.0, self.food - rate * self.food_metab_factor)
+        # Reducir agua (igual para todos), asegurando que no sea negativa.
         self.water = max(0.0, self.water - rate)
 
     def move(self, distance: float = 1.0, direction: str = "stay") -> None:

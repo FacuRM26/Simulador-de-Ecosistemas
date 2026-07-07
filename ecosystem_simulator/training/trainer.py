@@ -1,30 +1,18 @@
 """
-Módulo principal para el entrenamiento del modelo RL.
+Configuración de PPO y helpers reutilizables de entrenamiento.
+
+Este módulo NO ejecuta el loop de entrenamiento (eso vive en
+`orchestrator.py`). Solo expone:
+  - build_config: la configuración PPO lista para usar.
+  - helpers de política/estado LSTM.
+  - get_monitor_header / build_monitor_row: filas del monitor.csv.
+  - run_policy_episode: correr un episodio con las políticas entrenadas.
 """
 import os
 os.environ.pop("AIR_VERBOSITY", None)
 
-import csv
-from pathlib import Path
-
-import numpy as np
-import ray
-
 from ..environment.multi_agent_ecosystem import MultiAgentEcosystem
 from .callbacks import PerAgentAndReasonMetrics
-
-from ecosystem_simulator.config import ENV_CFG, NUM_RUNNERS, NUM_ITERS
-
-#NUM_ITERS       = DEFAULT_NUM_ITERS         
-VIS_START_FRAC  = 0.7         # empezar al 50% del entrenamiento
-VIS_INTERVAL    = 10 
-
-try:
-    from ..utils.pygame_visualizer import EcosystemVisualizer
-    HAS_PYGAME = True
-except ImportError:
-    HAS_PYGAME = False
-    print("Pygame no disponible - visualización desactivada")
 
 
 def build_config(
@@ -361,77 +349,3 @@ def run_policy_episode(trainer, env_cfg: dict, step_callback=None):
 
         if all(terminations.values()) or all(truncations.values()):
             break
-
-def main(enable_visualization: bool = False):
-    ray.init(ignore_reinit_error=True)
-
-    # --- Configuración del entorno ---
-    # Copia local para no mutar el global importado.
-    env_cfg = dict(ENV_CFG)
-    n_agents = env_cfg["n_agents"]
-
-    config = build_config(
-        env_cfg=env_cfg,
-        num_runners=NUM_RUNNERS,
-        callbacks_class=PerAgentAndReasonMetrics,
-    )
-
-    trainer = config.build()
-    start_vis_iter = int(NUM_ITERS * VIS_START_FRAC)
-
-    visualizer = None
-    if enable_visualization and HAS_PYGAME:
-        visualizer = EcosystemVisualizer(
-            map_width=env_cfg["map_width"],
-            map_height=env_cfg["map_height"]
-        )
-        print("Visualización en tiempo real activada")
-
-    output_csv = Path(__file__).resolve().parents[2] / "monitor.csv"
-    print("Guardando monitor en:", output_csv)
-
-    try:
-        with open(output_csv, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(get_monitor_header(n_agents))
-
-            for i in range(NUM_ITERS):
-                result = trainer.train()
-                row, r_mean, l_mean = build_monitor_row(result, i, n_agents)
-
-                writer.writerow(row)
-                f.flush()
-
-                print(f"Iter {i}: ep_return_mean={r_mean}, ep_len_mean={l_mean}")
-
-                if visualizer and i >= start_vis_iter and (i - start_vis_iter) % VIS_INTERVAL == 0:
-                    try:
-                        print(f"Mostrando visualización de la iteración {i}")
-
-                        def render_step(env, step, rewards, terminations, truncations, infos):
-                            alive_count = len(env.agents)
-                            metrics = {
-                                "mean_reward": np.mean(list(rewards.values())) if rewards else 0,
-                                "total_reward": sum(rewards.values()) if rewards else 0,
-                                "alive_agents": alive_count,
-                                "total_agents": n_agents,
-                                "iteration": i,
-                            }
-
-                            return visualizer.render(
-                                env, env.species, step, i, rewards, metrics
-                            )
-
-                        run_policy_episode(trainer, env_cfg, step_callback=render_step)
-                        print("Visualización completada")
-
-                    except Exception as e:
-                        print(f"Error en visualización: {e}")
-    finally:
-        if visualizer:
-            visualizer.close()
-        ray.shutdown()
-
-
-if __name__ == "__main__":
-    main()
