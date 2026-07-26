@@ -11,7 +11,7 @@ ENV_CFG = {
     "n_predators": 2,
 }
 NUM_RUNNERS = 4
-NUM_ITERS = 1000
+NUM_ITERS = 900
 
 # Iteración a partir de la cual se envía estado a Godot.
-VIS_START_IT = 980
+VIS_START_IT = 880

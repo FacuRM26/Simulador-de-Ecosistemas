@@ -14,18 +14,13 @@ Ejemplos:
     python run.py --iters 50            # override rápido de iteraciones
 
 Los modos LLM requieren Ollama corriendo (p.ej. `ollama run mistral`).
---reflexion se construye en la fase siguiente.
+Todos los modos son combinables en una sola corrida.
 """
 from __future__ import annotations
 
 import argparse
 
 from ecosystem_simulator.training.orchestrator import run_training
-
-# Modos LLM aún no cableados (se construyen en fases siguientes).
-_PENDING = {
-    "reflexion": "Fase 4",
-}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -39,7 +34,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--behavior-selector", action="store_true",
                    help="Selector LLM de comportamientos por rol (requiere Ollama).")
     p.add_argument("--reflexion", action="store_true",
-                   help="[Fase 4] Reflexión LLM entre iteraciones.")
+                   help="Reflexión LLM que alimenta a los otros módulos (requiere Ollama).")
     p.add_argument("--plot", action="store_true",
                    help="Muestra los gráficos de análisis al finalizar.")
     p.add_argument("--iters", type=int, default=None,
@@ -54,14 +49,6 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = build_parser().parse_args()
 
-    # Avisar sobre modos LLM todavía no implementados.
-    pending = [name for name in _PENDING if getattr(args, name)]
-    if pending:
-        for name in pending:
-            flag = "--" + name.replace("_", "-")
-            print(f"[!] {flag} aún no está implementado (se construye en {_PENDING[name]}).")
-        return 1
-
     modes = set()
     if args.godot:
         modes.add("godot")
@@ -69,6 +56,8 @@ def main() -> int:
         modes.add("behavior_selector")
     if args.reward_shaping:
         modes.add("reward_shaping")
+    if args.reflexion:
+        modes.add("reflexion")
 
     kwargs = {
         "plot": args.plot,

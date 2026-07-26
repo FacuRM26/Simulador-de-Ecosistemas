@@ -28,6 +28,7 @@ from .godot_hook import GodotStreamer
 
 MONITOR_PATH = Path(__file__).resolve().parents[2] / "monitor.csv"
 SHAPING_LOG_PATH = Path(__file__).resolve().parents[2] / "monitor_shaping.csv"
+REFLEXION_LOG_PATH = Path(__file__).resolve().parents[2] / "monitor_reflexion.log"
 
 # Modos que requieren el pipeline LLM (y por tanto Ollama).
 _LLM_MODES = {"reward_shaping", "behavior_selector", "reflexion"}
@@ -101,7 +102,8 @@ class TrainingOrchestrator:
             self.pipeline = LLMPipeline(self.modes, model=llm_model)
 
         self._trainer = None
-        self._shaping_log = None  # writer del csv de trazas de shaping
+        self._shaping_log = None    # writer del csv de trazas de pesos
+        self._reflexion_log = None  # file de lecciones de reflexión
 
     # ── Hooks de extensión ─────────────────────────────────────────────────
     def _pre_train(self, iteration: int, prev_result: dict | None) -> None:
@@ -123,10 +125,21 @@ class TrainingOrchestrator:
             self._log_weights(iteration, weights)
 
     def _post_train(self, iteration: int, result: dict) -> None:
-        """Después de train() y del envío a Godot: Fase 4 (reflexion)."""
-        if self.pipeline is None:
+        """
+        Después de train() y del envío a Godot: Fase 4 (reflexion). Genera una
+        lección de la iteración y actualiza el contexto que usarán selector y
+        shaper en las siguientes. Se llama a la misma cadencia que el shaping.
+        """
+        if self.pipeline is None or self.pipeline.reflexion is None:
             return
-        self.pipeline.post_train(_extract_metrics(result))
+        if iteration % self.shape_interval != 0:
+            return
+        lesson = self.pipeline.post_train(_extract_metrics(result))
+        if lesson:
+            print(f"    [reflexión] iter {iteration}: {lesson}")
+            if self._reflexion_log is not None:
+                self._reflexion_log.write(f"{iteration}\t{lesson}\n")
+                self._reflexion_log.flush()
 
     def _push_weights(self, weights: dict) -> None:
         """Empuja los pesos a la instancia real del entorno en cada env runner."""
@@ -185,6 +198,10 @@ class TrainingOrchestrator:
             from ..llm.reward_shaping import WEIGHT_KEYS
             self._shaping_log.writerow(["iter"] + sorted(WEIGHT_KEYS))
 
+        # Log de lecciones de reflexión (texto, una por línea: iter<TAB>lección).
+        if self.pipeline is not None and self.pipeline.reflexion is not None:
+            self._reflexion_log = open(REFLEXION_LOG_PATH, "w", encoding="utf-8")
+
         try:
             with open(MONITOR_PATH, "w", newline="") as f:
                 writer = csv.writer(f)
@@ -214,6 +231,8 @@ class TrainingOrchestrator:
         finally:
             if shaping_file is not None:
                 shaping_file.close()
+            if self._reflexion_log is not None:
+                self._reflexion_log.close()
             ray.shutdown()
 
         print("\n[+] Entrenamiento completado. Monitor en:", MONITOR_PATH)

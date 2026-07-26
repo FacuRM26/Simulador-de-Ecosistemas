@@ -18,6 +18,7 @@ from typing import Dict, Optional
 from .ollama_utils import check_ollama_available, OllamaError
 from .reward_shaping import RewardShaper
 from .behavior_selector import BehaviorSelector
+from .reflexion import ReflectionAgent
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +36,8 @@ class LLMPipeline:
         )
         # Fase 2: reward shaping (ajusta fino, sobre el preset si existe).
         self.shaper = RewardShaper(model=model) if "reward_shaping" in self.modes else None
-        # Fase 4 (se cablea en su fase)
-        self.reflexion = None
+        # Fase 4: reflexion (analiza tras la iteración, alimenta a los otros dos).
+        self.reflexion = ReflectionAgent(model=model) if "reflexion" in self.modes else None
 
         # Contexto que la reflexión (Fase 4) inyecta en selector/shaper.
         self._reflexion_context = ""
@@ -79,11 +80,17 @@ class LLMPipeline:
         return weights
 
     # ── Hook POST-entrenamiento ────────────────────────────────────────────
-    def post_train(self, metrics: Dict[str, float]) -> None:
-        """Fase 4: reflexion analiza la iteración y actualiza el contexto."""
-        # if self.reflexion is not None:
-        #     self._reflexion_context = self.reflexion.reflect(metrics)
-        return
+    def post_train(self, metrics: Dict[str, float]) -> Optional[str]:
+        """
+        Fase 4: reflexion analiza la iteración, genera una lección y actualiza el
+        contexto que usarán selector y shaper en las siguientes iteraciones.
+        Devuelve la lección (o None) para que el orquestador la muestre/loguee.
+        """
+        if self.reflexion is None:
+            return None
+        lesson = self.reflexion.reflect(metrics)
+        self._reflexion_context = self.reflexion.context()
+        return lesson
 
     def statistics(self) -> Dict:
         stats = {}
@@ -91,4 +98,6 @@ class LLMPipeline:
             stats["behavior_selector"] = self.selector.get_statistics()
         if self.shaper is not None:
             stats["reward_shaping"] = self.shaper.get_statistics()
+        if self.reflexion is not None:
+            stats["reflexion"] = self.reflexion.get_statistics()
         return stats
