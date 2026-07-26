@@ -21,6 +21,7 @@ def build_config(
     callbacks_class=None,
     use_lstm: bool = False,
     num_gpus: int = 0,
+    seed: int | None = None,
 ):
     """
     Construye y retorna la configuración PPO lista para usar.
@@ -74,22 +75,24 @@ def build_config(
         )
     )
 
-    config = config.api_stack(
+    # Old API stack
+    config.api_stack(
         enable_rl_module_and_learner=False,
-        enable_env_runner_and_connector_v2=False
+        enable_env_runner_and_connector_v2=False,
     )
 
-    config = config.resources(num_gpus=num_gpus)
+    # Forzar uso de CPU
+    config.resources(
+        num_gpus=num_gpus,
+    )
 
-    try:
-        config = config.rollouts(batch_mode="truncate_episodes")
-    except Exception:
-        pass
-
-    config = config.env_runners(
+    # Configuración de los runners.
+    # batch_mode se configura aquí, sin usar rollouts().
+    config.env_runners(
         num_env_runners=num_runners,
         rollout_fragment_length=frag,
-        sample_timeout_s=300
+        sample_timeout_s=300,
+        batch_mode="truncate_episodes",
     )
 
     # Configuración del modelo.
@@ -125,19 +128,20 @@ def build_config(
     )
 
     try:
-        # Old API stack (el tuyo)
-        config = config.training(
+        config.training(
             num_sgd_iter=num_epochs,
             sgd_minibatch_size=minibatch,
             **train_kwargs,
         )
     except TypeError:
-        # Fallback para versiones nuevas de RLlib
-        config = config.training(
+        config.training(
             num_epochs=num_epochs,
             minibatch_size=minibatch,
             **train_kwargs,
         )
+
+        if seed is not None:
+            config.debugging(seed=seed)
 
     return config
 def get_policy_id_for_agent(agent_id: str, env_cfg: dict) -> str:
