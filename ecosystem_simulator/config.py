@@ -14,11 +14,11 @@ NUM_ITERS = 2000
 
 # Configuración de múltiples experimentos
 NUM_RUNS = 3
-BASE_SEED = 1001
+BASE_SEED = 1005
 
 # Cantidad de iteraciones finales que se promedian
 # dentro de cada ejecución.
-TAIL_ITERS = 1
+TAIL_ITERS = 100
 
 # Iteración desde la que se visualiza en Godot.
-VIS_START_IT = 980
+VIS_START_IT = 2001
