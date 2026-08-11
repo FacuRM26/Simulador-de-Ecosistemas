@@ -448,6 +448,14 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
         self._ep_food_sum = {a: 0.0 for a in self.possible_agents}
         self._ep_water_sum = {a: 0.0 for a in self.possible_agents}
         self._ep_critical_steps = {a: 0 for a in self.possible_agents}
+
+        # --- Métricas de comportamiento emergente (agrupación / evasión) ---
+        # Distancia media al vecino más cercano de la MISMA especie (agrupación)
+        # y al depredador más cercano (evasión). Se acumulan por paso.
+        self._ep_nn_sum = {a: 0.0 for a in self.possible_agents}
+        self._ep_nn_steps = {a: 0 for a in self.possible_agents}
+        self._ep_pred_dist_sum = {a: 0.0 for a in self.possible_agents}
+        self._ep_pred_dist_steps = {a: 0 for a in self.possible_agents}
         # Observaciones iniciales
         observations = {
             agent: self._get_obs(self.species[self._agent_idx[agent]], agent)
@@ -1074,6 +1082,16 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
 
 
     def _build_obs_and_episode_metrics(self, ctx: StepContext):
+        # --- Comportamiento emergente: posiciones vivas por rol (una vez por paso) ---
+        live_herb_pos = [
+            (s.x, s.y) for s in self.species
+            if s.alive and s.role is Role.HERBIVORE
+        ]
+        live_pred_pos = [
+            (s.x, s.y) for s in self.species
+            if s.alive and s.role is Role.PREDATOR
+        ]
+
         for agent in ctx.prev_agents:
             sp = self.species[self._agent_idx[agent]]
             ctx.obs[agent] = self._get_obs(sp, agent)
@@ -1094,6 +1112,30 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             if min(f_norm, w_norm) < 0.15:
                 self._ep_critical_steps[agent] += 1
 
+            # --- Agrupación y evasión (solo mientras el agente está vivo) ---
+            if sp.alive:
+                same_pos = live_herb_pos if sp.role is Role.HERBIVORE else live_pred_pos
+                # Vecino más cercano de la misma especie (excluyéndose a sí mismo).
+                nn = None
+                for (ox, oy) in same_pos:
+                    if ox == sp.x and oy == sp.y:
+                        continue
+                    d = float(np.hypot(sp.x - ox, sp.y - oy))
+                    if nn is None or d < nn:
+                        nn = d
+                if nn is not None:
+                    self._ep_nn_sum[agent] += nn
+                    self._ep_nn_steps[agent] += 1
+
+                # Distancia al depredador más cercano (solo tiene sentido en presas).
+                if sp.role is Role.HERBIVORE and live_pred_pos:
+                    pd = min(
+                        float(np.hypot(sp.x - px, sp.y - py))
+                        for (px, py) in live_pred_pos
+                    )
+                    self._ep_pred_dist_sum[agent] += pd
+                    self._ep_pred_dist_steps[agent] += 1
+
             ep_len = max(1, self._ep_len[agent])
 
             # Guardar resumen acumulado en info
@@ -1111,6 +1153,16 @@ class MultiAgentEcosystem(ParallelEnv, Ecosystem):
             ctx.infos[agent]["ep_avg_water"] = float(self._ep_water_sum[agent] / ep_len)
             ctx.infos[agent]["ep_critical_steps"] = int(self._ep_critical_steps[agent])
             ctx.infos[agent]["ep_critical_ratio"] = float(self._ep_critical_steps[agent] / ep_len)
+
+            # Comportamiento emergente
+            nn_steps = self._ep_nn_steps[agent]
+            ctx.infos[agent]["ep_avg_nn_dist"] = float(
+                self._ep_nn_sum[agent] / nn_steps if nn_steps else 0.0
+            )
+            pd_steps = self._ep_pred_dist_steps[agent]
+            ctx.infos[agent]["ep_avg_pred_dist"] = float(
+                self._ep_pred_dist_sum[agent] / pd_steps if pd_steps else 0.0
+            )
 
             if ctx.terminations.get(agent, False) or ctx.truncations.get(agent, False):
                 terminal_reason = ctx.infos[agent].get("reason", "")

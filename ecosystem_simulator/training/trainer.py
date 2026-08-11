@@ -140,8 +140,11 @@ def build_config(
             **train_kwargs,
         )
 
-        if seed is not None:
-            config.debugging(seed=seed)
+    # Fuera del except: debe aplicarse SIEMPRE, no solo cuando falla la
+    # primera llamada. Con el old API stack la primera SÍ funciona, así que
+    # antes el seed nunca se aplicaba y las corridas no eran reproducibles.
+    if seed is not None:
+        config.debugging(seed=seed)
 
     return config
 def get_policy_id_for_agent(agent_id: str, env_cfg: dict) -> str:
@@ -238,6 +241,9 @@ def get_monitor_header(n_agents: int):
             "predator_avg_food", "predator_avg_water",
 
             "herbivore_critical_ratio", "predator_critical_ratio",
+
+            "herbivore_avg_nn_dist", "predator_avg_nn_dist",
+            "herbivore_avg_pred_dist",
         ]
         + [f"r_agent_{i}" for i in range(n_agents)]
         + [f"l_agent_{i}" for i in range(n_agents)]
@@ -295,6 +301,10 @@ def build_monitor_row(result: dict, iteration: int, n_agents: int):
 
         m("herbivore_critical_ratio"),
         m("predator_critical_ratio"),
+
+        m("herbivore_avg_nn_dist"),
+        m("predator_avg_nn_dist"),
+        m("herbivore_avg_pred_dist"),
     ]
 
     row.extend(m(f"agent_{a}/episode_return") for a in range(n_agents))

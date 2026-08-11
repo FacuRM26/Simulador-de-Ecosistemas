@@ -107,6 +107,7 @@ class TrainingOrchestrator:
 
         self.monitor_path = self.output_dir / "monitor.csv"
         self.shaping_log_path = self.output_dir / "monitor_shaping.csv"
+        self.reflexion_log_path = self.output_dir / "monitor_reflexion.txt"
         # Cada cuántas iteraciones consulta el LLM (para no llamarlo por iteración).
         self.shape_interval = max(1, shape_interval)
 
@@ -195,7 +196,9 @@ class TrainingOrchestrator:
 
         # Log de lecciones de reflexión (texto, una por línea: iter<TAB>lección).
         if self.pipeline is not None and self.pipeline.reflexion is not None:
-            self._reflexion_log = open(REFLEXION_LOG_PATH, "w", encoding="utf-8")
+            self._reflexion_log = open(
+                self.reflexion_log_path, "w", encoding="utf-8"
+            )
 
         try:
             ray.init(ignore_reinit_error=True)

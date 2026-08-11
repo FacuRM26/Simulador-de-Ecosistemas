@@ -63,6 +63,8 @@ class PerAgentAndReasonMetrics(DefaultCallbacks):
                 "avg_water": 0.0,
                 "critical_steps": 0,
                 "critical_ratio": 0.0,
+                "avg_nn_dist": 0.0,
+                "avg_pred_dist": 0.0,
             })
 
             rec["ret"] = float(info.get("ep_return", rec["ret"]))
@@ -82,6 +84,10 @@ class PerAgentAndReasonMetrics(DefaultCallbacks):
 
             rec["critical_steps"] = int(info.get("ep_critical_steps", rec["critical_steps"]))
             rec["critical_ratio"] = float(info.get("ep_critical_ratio", rec["critical_ratio"]))
+
+            # Comportamiento emergente
+            rec["avg_nn_dist"] = float(info.get("ep_avg_nn_dist", rec["avg_nn_dist"]))
+            rec["avg_pred_dist"] = float(info.get("ep_avg_pred_dist", rec["avg_pred_dist"]))
 
             # Ataques del step actual
             attempt = int(info.get("attack_attempt", 0))
@@ -176,6 +182,8 @@ class PerAgentAndReasonMetrics(DefaultCallbacks):
             log_metric(f"{role_key}_avg_water", mean_val(records, "avg_water"))
             log_metric(f"{role_key}_critical_ratio", mean_val(records, "critical_ratio"))
             log_metric(f"{role_key}_critical_steps", mean_val(records, "critical_steps"))
+            log_metric(f"{role_key}_avg_nn_dist", mean_val(records, "avg_nn_dist"))
+            log_metric(f"{role_key}_avg_pred_dist", mean_val(records, "avg_pred_dist"))
 
             counts = Counter((r.get("reason") or "").strip() for _, r in records)
             for reason in reasons:

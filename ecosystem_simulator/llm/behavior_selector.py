@@ -11,6 +11,7 @@ el selector toma una decisión DISCRETA e interpretable: "esta iteración los
 herbívoros priorizan evadir y los depredadores conservan energía".
 """
 import logging
+import unicodedata
 from typing import Dict
 
 from .ollama_utils import (
@@ -20,6 +21,14 @@ from .ollama_utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+def _norm_preset(value: str) -> str:
+    """Normaliza la respuesta del LLM: minúsculas, sin tildes, sin comillas ni ruido."""
+    text = unicodedata.normalize("NFKD", str(value))
+    text = "".join(c for c in text if not unicodedata.combining(c))
+    text = text.strip().strip('"\'').lower()
+    # Si viene con ruido ("estrategia: evasion"), quedarse con la última palabra.
+    return text.split()[-1] if text.split() else ""
 
 # Presets por rol. Cada uno es un perfil de pesos (los no listados quedan en 1.0).
 # Los nombres son la "estrategia" que el LLM elige según el estado del ecosistema.
@@ -125,11 +134,13 @@ Responde SOLO con un JSON: {{"herbivore": "<estrategia>", "predator": "<estrateg
             return self._preset_weights(self.last_choice["herbivore"], self.last_choice["predator"])
 
         data = extract_json_from_response(response) or {}
-        herb = str(data.get("herbivore", "")).strip().lower()
-        pred = str(data.get("predator", "")).strip().lower()
+        herb = _norm_preset(data.get("herbivore", ""))
+        pred = _norm_preset(data.get("predator", ""))
         if herb not in HERBIVORE_PRESETS:
+            logger.warning(f"[BehaviorSelector] preset herbívoro inválido: {data.get('herbivore')!r}")
             herb = self.last_choice["herbivore"]
         if pred not in PREDATOR_PRESETS:
+            logger.warning(f"[BehaviorSelector] preset depredador inválido: {data.get('predator')!r}")
             pred = self.last_choice["predator"]
 
         self.last_choice = {"herbivore": herb, "predator": pred}
