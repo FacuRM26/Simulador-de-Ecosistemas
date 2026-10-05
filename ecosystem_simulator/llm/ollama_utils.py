@@ -19,7 +19,7 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 OLLAMA_API_URL = "http://localhost:11434/api/generate"
-OLLAMA_TIMEOUT = 30  # segundos
+OLLAMA_TIMEOUT = 40  # segundos
 DEFAULT_MODEL = "mistral"  # cambiar a neural-chat para menor latencia
 
 

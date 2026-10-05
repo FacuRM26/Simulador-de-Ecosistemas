@@ -28,6 +28,35 @@ WEIGHT_KEYS = [
     "hunt", "drink_pred", "homeo_pred", "explore_pred",
 ]
 
+def normalize_weights(weights: Dict[str, float]) -> Dict[str, float]:
+    """
+    Fija la MEDIA de los pesos en 1.0, dejando solo el BALANCE RELATIVO.
+
+    Por qué: PPO normaliza las ventajas, así que multiplicar TODOS los términos
+    de recompensa por una constante es prácticamente un no-op. En la primera
+    evaluación el LLM subía todos los pesos a la vez (solo 3 de 1053 valores
+    quedaron por debajo de 1.0) y su señal se cancelaba matemáticamente => el
+    efecto medido fue nulo.
+
+    Normalizando, subir un peso OBLIGA a que otros bajen en términos relativos:
+    cambia la FORMA de la función de recompensa, que es lo que PPO sí percibe.
+    """
+    values = [weights[k] for k in WEIGHT_KEYS if k in weights]
+
+    if not values:
+        return dict(weights)
+
+    mean = sum(values) / len(values)
+
+    if mean <= 0:
+        return dict(weights)
+
+    return {
+        k: (v / mean if k in WEIGHT_KEYS else v)
+        for k, v in weights.items()
+    }
+
+
 _WEIGHT_MEANING = """HERBÍVORO:
 - eat: incentivo a comer vegetación
 - escape: incentivo a huir de los depredadores
@@ -110,16 +139,25 @@ OBJETIVO CENTRAL: que AMBOS roles sean VIABLES. La meta es que herbívoros Y dep
 tasa razonable (idealmente 25-50% cada uno). Un rol con supervivencia < 20% o
 > 75% está desequilibrado y hay que corregirlo.
 
-REGLAS IMPORTANTES:
+REGLA CRÍTICA — SOLO CUENTA EL BALANCE RELATIVO:
+Los pesos se NORMALIZAN para que su promedio sea siempre 1.0. Por lo tanto:
+- Subir TODOS los pesos a la vez NO TIENE NINGÚN EFECTO (es igual a no hacer nada).
+- Para reforzar un comportamiento debes SUBIR ese peso Y BAJAR otros por debajo
+  de 1.0. Es un juego de suma: lo que le das a uno se lo quitas a otro.
+- Tu respuesta debe incluir SIEMPRE algunos pesos por debajo de 1.0 (los
+  comportamientos menos prioritarios ahora mismo) y otros por encima.
+- Un conjunto de pesos todos parecidos entre sí equivale a no intervenir.
+
+REGLAS ADICIONALES:
 - Los pesos son POR ROL. Ayuda al rol que está peor SIN perjudicar al otro: por
   ejemplo, si el herbívoro muere de sed sube 'drink_herb' (NO 'drink_pred').
 - Si un rol pasa hambre, súbele su capacidad de conseguir comida (herbívoro:
   'eat'/'explore_herb'; depredador: 'hunt'/'explore_pred'). NO bajes 'hunt' si
   los depredadores ya pasan hambre.
-- Evita llevar un peso a los extremos ({self.weight_min} o {self.weight_max}) salvo que sea claramente necesario.
+- Evita los extremos ({self.weight_min} o {self.weight_max}) salvo que sea claramente necesario.
 - Cambios GRADUALES: no más de ~0.2 por iteración.
 
-Pesos actuales (multiplican cada término; rango {self.weight_min}-{self.weight_max}; 1.0 = neutro):
+Pesos actuales (rango {self.weight_min}-{self.weight_max}; promedio siempre 1.0):
 {current}
 
 Significado de cada peso:
@@ -129,7 +167,9 @@ Estado del ecosistema en la última iteración:
 {summary}
 {ctx_block}
 Responde SOLO con un objeto JSON con las 9 claves y valores numéricos, sin texto.
-Ejemplo: {{"eat": 1.1, "escape": 1.2, "drink_herb": 1.3, "homeo_herb": 1.1, "explore_herb": 1.1, "hunt": 1.2, "drink_pred": 1.0, "homeo_pred": 1.0, "explore_pred": 1.1}}"""
+Recuerda: debe haber valores por ENCIMA y por DEBAJO de 1.0.
+Ejemplo (prioriza que el herbívoro beba y huya, a costa de explorar y cazar):
+{{"eat": 1.0, "escape": 1.4, "drink_herb": 1.5, "homeo_herb": 1.1, "explore_herb": 0.7, "hunt": 0.8, "drink_pred": 1.0, "homeo_pred": 0.9, "explore_pred": 0.6}}"""
 
         try:
             response = call_ollama_with_retry(
@@ -145,10 +185,20 @@ Ejemplo: {{"eat": 1.1, "escape": 1.2, "drink_herb": 1.3, "homeo_herb": 1.1, "exp
             logger.warning("[RewardShaper] El LLM no devolvió JSON válido. Mantengo pesos.")
             return dict(start)
 
-        new_weights = {
+        raw_weights = {
             k: self._clamp(data.get(k, start[k]), start[k])
             for k in WEIGHT_KEYS
         }
+
+        # Normalizar (media = 1.0) para que solo cuente el balance relativo, y
+        # volver a acotar por seguridad tras la división.
+        normalized = normalize_weights(raw_weights)
+
+        new_weights = {
+            k: self._clamp(v, 1.0)
+            for k, v in normalized.items()
+        }
+
         self.last_weights = new_weights
         return dict(new_weights)
 

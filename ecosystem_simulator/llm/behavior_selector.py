@@ -78,10 +78,15 @@ class BehaviorSelector:
     def _preset_weights(self, herb_preset: str, pred_preset: str) -> Dict[str, float]:
         """Combina los dos presets elegidos en un dict de pesos completo (base 1.0)."""
         from ..environment.multi_agent_ecosystem import DEFAULT_REWARD_WEIGHTS
+        from .reward_shaping import normalize_weights
+
         weights = dict(DEFAULT_REWARD_WEIGHTS)  # todo 1.0
         weights.update(HERBIVORE_PRESETS.get(herb_preset, {}))
         weights.update(PREDATOR_PRESETS.get(pred_preset, {}))
-        return weights
+
+        # Media = 1.0: solo cuenta el balance relativo entre comportamientos
+        # (ver normalize_weights). Mantiene la coherencia con el reward shaping.
+        return normalize_weights(weights)
 
     def select_presets(
         self,
