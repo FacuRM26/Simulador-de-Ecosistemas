@@ -1,0 +1,8 @@
+Comportamiento,Linea base,Con modelo,Mejora %,No concluyente
+Agrupacion de presas (dist. al vecino mas cercano),176.59px +-1.41,177.24px +-2.01,-0.4%,si
+Evasion (dist. al depredador mas cercano),202.78px +-0.79,209.48px +-9.83,+3.3%,si
+Supervivencia de presas,33.21% +-1.96,31.67% +-0.91,-4.6%,si
+Busqueda de alimento (ingestas/episodio),5.42 +-0.11,5.33 +-0.20,-1.6%,si
+Busqueda de agua (tomas/episodio),5.60 +-0.09,5.68 +-0.42,+1.4%,si
+Exito de caza (presas cazadas/episodio),0.80 +-0.10,1.10 +-0.44,+37.3%,si
+Supervivencia de depredadores,80.76% +-7.04,86.00% +-6.35,+6.5%,si

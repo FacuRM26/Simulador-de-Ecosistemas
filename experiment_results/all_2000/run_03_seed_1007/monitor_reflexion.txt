@@ -1,0 +1,400 @@
+0	Herbívoros necesitan aumentar su consumo para contrarrestar el alto porcentaje de muerte por hambre, mientras que los depredadores deben aumentar su caza para supervivencia.
+5	Herbívoros deben aumentar su consumo. Los depredadores deben reducir su caza.
+10	Herbívoros deben reducir su consumo para equilibrar la alta tasa de muerte por hambre. Depredadores deben aumentar su caza para contrarrestar la baja tasa de supervivencia.
+15	Herbívoros deben aumentar su consumo para contrarrestar la alta tasa de muerte por hambre.
+20	Herbívoros deben reducir su consumo para minimizar la tasa alta de muerte por hambre, mientras que depredadores deben aumentar su caza para contrarrestar la baja tasa de supervivencia.
+25	Depredadores deben aumentar su caza para contrarrestar la alta tasa de muerte por hambre.
+30	Depredadores deben aumentar su caza para contrarrestar la alta tasa de muerte por hambre.
+35	Depredadores deben aumentar la caza para contrarrestar la alta tasa de muerte por hambre, particularmente debido al elevado porcentaje de herbívoros que mueren de hambre (46%).
+40	Depredadores deben aumentar la caza para reducir el 47% de muerte por hambre y mantener la sostenibilidad del ecosistema.
+45	Depredadores deben aumentar la caza (hacerlo más frecuente) para reducir la alta tasa de muerte por hambre de los herbívoros (46%) y mantener la sostenibilidad del ecosistema.
+50	Depredadores deben cazar más frecuentemente para disminuir la alta tasa de muerte por hambre de los herbívoros (47%).
+55	Depredadores deben cazar más frecuente para disminuir la alta tasa de muerte por hambre de los herbívoros (45%).
+60	Depredadores deben aumentar la frecuencia de caza para disminuir la alta tasa de muerte por hambre de los herbívoros, aumentando su sobrevivencia.
+65	Depredadores deben cazar más frecuentemente para disminuir la alta tasa de muerte por hambre de los herbívoros.
+70	Depredadores deben cazar más frecuente para reducir la alta tasa de muerte por hambre de los herbívoros, aumentando su sobrevivencia.
+75	Depredadores deben aumentar la frecuencia de caza para disminuir la alta tasa de muerte por hambre de los herbívoros, reduciendo muerte_hambre de los herbívoros y aumentando sobrevivencia.
+80	Depredadores deben incrementar la frecuencia de caza para reducir la alta tasa de muerte por hambre de los herbívoros, lo que aumentará su sobrevivencia.
+85	Depredadores deben aumentar la frecuencia de caza para reducir la alta tasa de muerte por hambre de los herbívoros.
+90	Depredadores deben aumentar la frecuencia de caza para reducir la alta tasa de muerte por hambre de los herbívoros y disminuir la tasa de muerte_hambre de los herbívoros.
+95	Depredadores deben aumentar la frecuencia de caza para disminuir la tasa de muerte_hambre de los herbívoros.
+100	Depredadores deben disminuir la frecuencia de caza para reducir la alta tasa de muerte_hambre de los herbívoros.
+105	Depredadores deben disminuir la frecuencia de caza para reducir la tasa de muerte_hambre de los herbívoros.
+110	Depredadores deben disminuir la frecuencia de caza para reducir la tasa de muerte_hambre de los herbívoros.
+115	Depredadores deben aumentar la frecuencia de caza para reducir la muerte_hambre de los herbívoros.
+120	Depredadores deben aumentar la frecuencia de caza para reducir la muerte_hambre de los herbívoros.
+125	Depredadores deben disminuir la frecuencia de caza para reducir el alto nivel de muerte por hambre de los herbívoros.
+130	Depredadores deben disminuir la frecuencia de caza para reducir el alto nivel de muerte por hambre de los herbívoros.
+135	Depredadores deben disminuir la frecuencia de caza para reducir el alto nivel de muerte por hambre de los herbívoros.
+140	"Depredadores deben disminuir la frecuencia de caza para reducir el alto nivel de muerte por hambre de los herbívoros, aumentando la probabilidad de sobrevivencia y disminuyendo su tasa de muerte por hambre."
+145	Depredadores deben aumentar la frecuencia de caza para reducir el alto nivel de muerte por hambre de los herbívoros.
+150	Los herbívoros tienen un nivel de muerte por hambre excesivamente alto (41%). Para corregirlo, es necesario que los herbívoros coman más para reducir su nivel de muerte por hambre.
+155	Los herbívoros tienen un nivel de muerte por hambre excesivo (24%). Para corregirlo, es necesario que los herbívoros coman más.
+160	Depredadores deben aumentar la frecuencia de caza para reducir el excesivo nivel de muerte por hambre de los herbívoros.
+165	Los herbívoros tienen un excesivo nivel de muerte por hambre (22%). Para corregirlo, es necesario que los herbívoros coman más.
+170	Los herbívoros mueren de hambre excesivo (23%), por lo que se debe aumentar la cantidad que comen.
+175	Los herbívoros mueren de hambre excesivo (24%), por lo que debería aumentar la cantidad que comen.
+180	Los herbívoros mueren de hambre excesivo (25%), por lo que se debe aumentar la cantidad que comen.
+185	Los herbívoros mueren de hambre excesivo (22%), por lo que se debe aumentar la cantidad que comen.
+190	"Los herbívoros sufren hambre excesiva (22%), debe aumentar la cantidad que comen."
+195	"Los herbívoros sufren hambre excesiva (20%), debe aumentar la cantidad que comen."
+200	Los herbívoros mueren de hambre excesiva (23%), debe aumentar la cantidad que comen.
+205	Los herbívoros mueren de hambre excesiva (22%); debe aumentar la cantidad que comen.
+210	Los herbívoros mueren de hambre excesiva; debe aumentar la cantidad que comen.
+215	Los herbívoros mueren de hambre excesiva; debe aumentar la cantidad que comen.
+220	Los herbívoros mueren de hambre excesiva; debe aumentar la cantidad que comen.
+225	Los herbívoros mueren de hambre excesiva; debe aumentar la cantidad que comen.
+230	Los herbívoros mueren de hambre excesiva; debe aumentar la cantidad que comen.
+235	Los herbívoros mueren de hambre excesiva; debe aumentar la cantidad que comen.
+240	Los herbívoros mueren de hambre excesiva; debe aumentar la cantidad que comen.
+245	Desequilibrio más importante: Los herbívoros mueren de hambre excesiva; debe aumentar la cantidad que comen.
+250	El desequilibrio más importante ahora es que los herbívoros mueren por hambre excesiva, por lo que debe aumentar la cantidad que comen.
+255	Los herbívoros mueren por hambre excesiva; debe aumentar la cantidad que comen.
+260	Los herbívoros mueren por hambre excesiva; debe aumentar la cantidad que comen.
+265	Los herbívoros mueren por hambre excesiva; debe aumentar la cantidad que comen.
+270	Los herbívoros mueren por hambre excesiva; debe aumentar la cantidad que comen.
+275	Los herbívoros mueren de hambre excesiva; debe aumentar la cantidad que comen.
+280	Los herbívoros mueren en excesivo por hambre; debe aumentar la cantidad que comen.
+285	Los herbívoros mueren por hambre excesiva; debe aumentar la cantidad que comen.
+290	Los herbívoros mueren de hambre en excesivo; debe aumentar la cantidad que comen.
+295	"Los herbívoros mueren de hambre en excesivo; debe aumentar la cantidad que comen."
+300	Los herbívoros mueren en excesivo de hambre, debe aumentar la cantidad que comen.
+305	Los herbívoros mueren de hambre en excesivo; debe aumentar la cantidad que comen.
+310	Los herbívoros mueren de hambre en excesivo; debe aumentar la cantidad que comen.
+315	Los herbívoros mueren de hambre en excesivo; debe aumentar la cantidad que comen.
+320	Herbívoros deben comer más para reducir la tasa de muerte por hambre.
+325	Herbívoros deben comer más para reducir la tasa de muerte por hambre.
+330	"La tasa de muerte por hambre de los herbívoros es demasiado alta. Debe aumentar la cantidad que comen para mejorar su situación."
+335	Los herbívoros mueren de hambre demasiado a menudo, necesitan aumentar su consumo de alimentos.
+340	Los herbívoros mueren demasiado a menudo debido a la falta de alimentos. Deberían aumentar su consumo de alimentos.
+345	Los herbívoros mueren de hambre demasiado a menudo. Deberían aumentar su consumo de alimentos.
+350	Los herbívoros mueren de hambre demasiado a menudo; deben aumentar su consumo de alimentos.
+355	Herbívoros mueren de hambre demasiado a menudo; deben aumentar su consumo de alimentos.
+360	Herbívoros deben incrementar su consumo de alimentos para disminuir la tasa de muerte por hambre.
+365	Los herbívoros deben aumentar su consumo de alimentos para disminuir la tasa de muerte por hambre.
+370	Los herbívoros mueren de hambre demasiado frecuentemente, por lo que deben aumentar su consumo de alimentos.
+375	Los herbívoros mueren de hambre demasiado frecuentemente. Para corregirlo, deben aumentar su consumo de alimentos.
+380	Los herbívoros mueren de hambre demasiado frecuentemente. Para corregirlo, deben aumentar su consumo de alimentos.
+385	Los herbívoros mueren de hambre demasiado frecuentemente. Para corregirlo, deben aumentar su consumo de alimentos.
+390	Los herbívoros mueren de hambre demasiado frecuentemente. Para corregirlo, deben aumentar su consumo de alimentos.
+395	Los herbívoros tienen una tasa de muerte por hambre excesiva (13%), lo que significa que deben aumentar su consumo de alimentos.
+400	Los herbívoros mueren de hambre excesivamente (13%), por lo que deberían aumentar su consumo de alimentos.
+405	Los herbívoros mueren de hambre excesivamente (13%), por lo que deberían aumentar su consumo de alimentos.
+410	Los herbívoros tienen una alta tasa de muerte por hambre (12%), por lo que deberían aumentar su consumo de alimentos.
+415	Los herbívoros deben aumentar su consumo de alimentos para reducir la tasa de muerte por hambre (13%).
+420	"Los herbívoros deben aumentar su consumo de alimentos para disminuir la tasa de muerte por hambre (12%)."
+425	Los herbívoros deben aumentar el consumo de alimentos para reducir la tasa de muerte por hambre (10%).
+430	Los herbívoros deben disminuir su consumo de alimentos para reducir la tasa de muerte por hambre (8%).
+435	"Los herbívoros deben disminuir su consumo de alimentos para reducir la tasa de muerte por hambre (8%)."
+440	Los herbívoros deben aumentar su consumo de alimentos para reducir la tasa de muerte por hambre (9%).
+445	Los herbívoros mueren de hambre demasiado frecuentemente (10%), lo que indica que deben aumentar su consumo de alimentos.
+450	"Los herbívoros mueren de hambre demasiado frecuentemente (10%), por lo que deben aumentar su consumo de alimentos."
+455	"Los herbívoros mueren de hambre demasiado frecuentemente (10%), por lo que deben aumentar su consumo de alimentos."
+460	Los herbívoros mueren de hambre demasiado frecuentemente (10%), por lo que deben aumentar su consumo de alimentos.
+465	Los herbívoros mueren de hambre demasiado frecuentemente (10%), por lo que deben aumentar su consumo de alimentos.
+470	"Los herbívoros mueren demasiado frecuentemente debido a la escasez de alimentos. Es preciso aumentar el consumo de alimentos por parte de los herbívoros para equilibrar el ecosistema."
+475	Los herbívoros mueren de hambre demasiado frecuentemente (10%), necesita aumentar el consumo de alimentos por parte de los herbívoros.
+480	Los herbívoros mueren demasiado frecuentemente debido a la escasez de alimentos. Es preciso aumentar el consumo de alimentos por parte de los herbívoros.
+485	Los herbívoros mueren de hambre demasiado frecuentemente (10%). Es preciso aumentar el consumo de alimentos por parte de los herbívoros.
+490	Los herbívoros mueren demasiado frecuentemente debido a la escasez de alimentos. Es preciso aumentar el consumo de alimentos por parte de los herbívoros.
+495	Los herbívoros mueren de hambre demasiado frecuentemente. Es preciso aumentar el consumo de alimentos por parte de los herbívoros.
+500	Desequilibrio más importante: Los herbívoros mueren de hambre demasiado frecuentemente (10%). Para corregirlo, es preciso aumentar el consumo de alimentos por parte de los herbívoros.
+505	Los herbívoros mueren de hambre demasiado frecuentemente (8%). Para corregirlo, es preciso aumentar el consumo de alimentos por parte de los herbívoros.
+510	El desequilibrio más importante ahora es el alto porcentaje de muerte por hambre de los herbívoros (11%). Para corregirlo, debería aumentarse el consumo de alimentos por parte de los herbívoros.
+515	El desequilibrio más importante ahora es el alto porcentaje de muerte por hambre de los herbívoros (12%). Para corregirlo, se debe aumentar el consumo de alimentos por parte de los herbívoros.
+520	Desequilibrio más importante: alto porcentaje de muerte por hambre de los herbívoros (11%). Para corregirlo, se debe aumentar el consumo de alimentos por parte de los herbívoros.
+525	El desequilibrio más importante es el alto porcentaje de muerte por hambre de los herbívoros (10%). Para corregirlo, se debe aumentar el consumo de alimentos por parte de los herbívoros.
+530	Aumentar el consumo de alimentos por los herbívoros es la estrategia más accionable para corregir el desequilibrio más importante, que es el alto porcentaje de muerte por hambre de los herbívoros (11%).
+535	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (10%). Para corregirlo, se debe aumentar el consumo de alimentos por parte de los herbívoros.
+540	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (12%). Para corregirlo, se debe aumentar el consumo de alimentos por parte de los herbívoros.
+545	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (12%). Para corregirlo, se debe aumentar el consumo de alimentos por parte de los herbívoros.
+550	Los herbívoros están experimentando una tasa alta de muerte por hambre (11%). Para corregirlo, debe aumentarse el consumo de alimentos por parte de los herbívoros.
+555	Los herbívoros experimentan una alta tasa de muerte por hambre (11%), necesita aumentarse el consumo de alimentos por parte de los herbívoros.
+560	La tasa más alta de muerte por hambre de los herbívoros (11%) debe ser reducida aumentando el consumo de alimentos por parte de los herbívoros.
+565	Los herbívoros mueren en gran cantidad debido a la hambre (11%). Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros.
+570	El desequilibrio más importante ahora es la alta tasa de muerte de hambre de los herbívoros (9%). Para corregirlo, debe aumentarse la producción de alimentos para los herbívoros.
+575	El desequilibrio más importante actualmente es la alta tasa de muerte de hambre de los herbívoros (10%). Para corregirlo, es necesario aumentar la producción de alimentos para los herbívoros.
+580	El desequilibrio más importante ahora es la alta tasa de muerte de hambre de los herbívoros (10%). Para corregirlo, debe aumentarse la producción de alimentos para los herbívoros.
+585	La tasa de muerte de hambre de los herbívoros (10%) es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de alimentos para los herbívoros.
+590	Los herbívoros tienen una tasa de muerte de hambre del 9%, por lo que debe aumentarse la producción de alimentos para ellos.
+595	Desequilibrio más importante actualmente: Alta tasa de muerte por hambre de los herbívoros (8%). Para corregirlo, debe aumentarse la producción de alimentos para los herbívoros.
+600	La alta tasa de muerte por hambre de los herbívoros (9%) es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de alimentos para los herbívoros.
+605	Aumente la producción de alimentos para los herbívoros, para corregir el desequilibrio más importante de alta tasa de muerte por hambre de los herbívoros.
+610	Para corregir el desequilibrio más importante actualmente, aumente la producción de alimentos para los herbívoros, lo que necesita disminuir la caza de ellos por los depredadores.
+615	Para corregir el desequilibrio más importante actualmente, es necesario aumentar la producción de alimentos para los herbívoros, lo que requiere disminuir la caza de ellos por los depredadores. (Herbívoros: disminuir caza; Depredadores: disminuir caza de herbívoros)
+620	Los herbívoros mueren de hambre demasiado a menudo; para corregirlo, debe aumentarse la producción de alimentos para ellos, lo que implica disminuir la caza de herbívoros por los depredadores.
+625	Los herbívoros mueren de hambre demasiado a menudo; para corregirlo, debe aumentarse la producción de alimentos para ellos, lo que implica disminuir la caza de herbívoros por los depredadores.
+630	Los herbívoros mueren de hambre demasiado a menudo; para corregirlo, debe aumentarse la producción de alimentos para ellos, lo que implica disminuir la caza de herbívoros por los depredadores.
+635	Los herbívoros mueren de hambre demasiado a menudo, por lo que es necesario aumentar la producción de alimentos para ellos, lo que implica disminuir la caza de herbívoros por los depredadores.
+640	Los herbívoros mueren de hambre demasiado a menudo, por lo que es necesario aumentar la producción de alimentos para ellos (augmente la producción de alimentos para los herbívoros).
+645	Los herbívoros muere de hambre demasiado a menudo; debe aumentarse la producción de alimentos para ellos (augmente la producción de alimentos para los herbívoros).
+650	Los herbívoros mueren de hambre demasiado a menudo; debe aumentarse la producción de alimentos para ellos (augmente la producción de alimentos para los herbívoros).
+655	Los herbívoros mueren de hambre más frecuentemente que los depredadores. Se necesita aumentar la producción de alimentos para los herbívoros para equilibrar el ecosistema.
+660	El desequilibrio más importante ahora es la masiva muerte de herbívoros por hambre. Para corregirlo, debe aumentarse la producción de alimentos para los herbívoros.
+665	El desequilibrio más importante ahora es la masiva muerte de herbívoros por hambre. Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros.
+670	La masiva muerte de herbívoros por hambre es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros, lo que podría significar permitir que más herbívoros sobrevivan y huir de los depredadores.
+675	Aumentar la producción de alimentos para los herbívoros, lo que puede significar permitir que más herbívoros sobrevivan y huir de los depredadores.
+680	La masiva muerte de herbívoros por hambre es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros, lo que significa permitir que más herbívoros sobrevivan y huir de los depredadores.
+685	La masiva muerte de herbívoros por hambre es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros, lo que significa permitir que más herbívoros sobrevivan y huir de los depredadores.
+690	La masiva muerte de herbívoros por hambre es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros, lo que significa permitir que más herbívoros sobrevivan y huir de los depredadores.
+695	La masiva muerte de herbívoros por hambre es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros, lo que significa permitir que más herbívoros sobrevivan y huir de los depredadores.
+700	El desequilibrio más importante ahora es la muerte masiva de herbívoros por hambre. Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros, lo que significa permitir que más herbívoros sobrevivan y huir de los depredadores.
+705	La muerte masiva de herbívoros por hambre es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros, lo que significa permitir que más herbívoros sobrevivan y huir de los depredadores.
+710	La muerte masiva de herbívoros por hambre es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros, lo que significa permitir que más herbívoros sobrevivan y huir de los depredadores.
+715	La muerte masiva de herbívoros por hambre es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros, lo que significa permitir que más herbívoros sobrevivan y huir de los depredadores.
+720	La muerte masiva de herbívoros por hambre es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de alimentos para los herbívoros, lo que significa permitir que más herbívoros sobrevivan y huir de los depredadores.
+725	La muerte masiva de herbívoros por hambre sigue siendo el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de alimentos para los herbívoros, lo que significa permitir que más herbívoros sobrevivan y huir de los depredadores.
+730	La muerte masiva de herbívoros por hambre sigue siendo el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de alimentos para los herbívoros, lo que significa permitir que más herbívoros sobrevivan y huir de los depredadores.
+735	La muerte masiva de herbívoros por hambre es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de alimentos para los herbívoros, lo que significa permitir que más herbívoros sobrevivan y huir de los depredadores.
+740	El desequilibrio más importante ahora es la muerte masiva de herbívoros por hambre. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan y huir de los depredadores.
+745	La muerte masiva de herbívoros por hambre es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan y huir de los depredadores.
+750	La muerte masiva de herbívoros por hambre es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan y huir de los depredadores.
+755	El desequilibrio más importante actualmente es la muerte masiva de herbívoros por hambre. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan y huir de los depredadores.
+760	Muerte masiva de herbívoros por hambre persiste. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan y huir de los depredadores.
+765	La muerte masiva de herbívoros por hambre persiste y para corregirlo en las próximas iteraciones debe aumentarse la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan y huir de los depredadores.
+770	La muerte masiva de herbívoros por hambre persiste, por lo que es necesario aumentar la producción de alimentos para ellos, permitiendo que más herbívoros sobrevivan y huir de los depredadores.
+775	La muerte masiva de herbívoros por hambre es el desequilibrio más importante actualmente. Para corregirlo, es necesario aumentar la producción de alimentos para los herbívoros.
+780	La muerte masiva de herbívoros por hambre es el desequilibrio más importante actualmente. Para corregirlo, es necesario aumentar la producción de alimentos para los herbívoros.
+785	La muerte masiva de herbívoros por hambre es el desequilibrio más importante ahora. Para corregirlo, es necesario aumentar la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan y huir de los depredadores.
+790	La muerte masiva de herbívoros por hambre es el desequilibrio más importante actualmente. Para corregirlo, es necesario aumentar la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan y huir de los depredadores.
+795	La muerte masiva de herbívoros por hambre es el desequilibrio más importante actualmente. Para corregirlo, es necesario aumentar la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan y huir de los depredadores.
+800	La muerte masiva de herbívoros por hambre es el desequilibrio más importante ahora. Para corregirlo, es necesario aumentar la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan.
+805	El desequilibrio más importante actualmente es la muerte masiva de herbívoros por hambre. Para corregirlo, debería aumentarse la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan.
+810	El desequilibrio más importante actualmente es la muerte masiva de herbívoros por hambre. Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan.
+815	El desequilibrio más importante actualmente es la muerte masiva de herbívoros por hambre. Para corregirlo, debería aumentarse la producción de alimentos para los herbívoros, permitiendo que más herbívoros sobrevivan.
+820	Desequilibrio más importante: Muerte masiva de herbívoros por hambre. Para corregirlo, aumentar la producción de alimentos para los herbívoros.
+825	El desequilibrio más importante ahora es la muerte masiva de herbívoros por hambre. Para corregirlo, aumentar la producción de alimentos para los herbívoros y permitir que más herbívoros sobrevivan.
+830	Desequilibrio más importante actualmente: Masiva muerte de herbívoros por hambre. Para corregirlo, aumentar la producción de alimentos para los herbívoros y permitir que más herbívoros sobrevivan.
+835	Desequilibrio más importante ahora: Masiva muerte de herbívoros por hambre. Para corregirlo, aumentar la producción de alimentos para los herbívoros y permitir que más herbívoros sobrevivan.
+840	El desequilibrio más importante ahora es la masiva muerte de herbívoros por hambre. Para corregirlo, necesario aumentar la producción de alimentos para los herbívoros.
+845	La masiva muerte de herbívoros por hambre es el desequilibrio más importante ahora. Se necesita aumentar la producción de alimentos para los herbívoros para que más de ellos sobrevivan.
+850	Aumentar la producción de alimentos para los herbívoros es necesario para que más de ellos sobrevivan, reduciendo la masiva muerte de herbívoros por hambre.
+855	La masiva muerte de herbívoros por hambre es el desequilibrio más importante ahora. Se debe aumentar la producción de alimentos para los herbívoros para que más de ellos sobrevivan. Aumentar la caza de herbívoros debería evitarse.
+860	La masiva muerte de herbívoros por hambre es el desequilibrio más importante ahora. Se debe aumentar la producción de alimentos para los herbívoros para que más de ellos sobrevivan, reduciendo la caza de herbívoros.
+865	El desequilibrio más importante ahora es la masiva muerte de herbívoros por hambre. La producción de alimentos para los herbívoros debe aumentarse para que más de ellos sobrevivan. Se debe reducir la caza de herbívoros.
+870	La masiva muerte de herbívoros por hambre es el desequilibrio más importante ahora. Se debe aumentar la producción de alimentos para los herbívoros para que más de ellos sobrevivan, reduciendo la caza de herbívoros.
+875	El desequilibrio más importante ahora es la masiva muerte de herbívoros por hambre. Para corregirlo, se debe aumentar la producción de alimentos para los herbívoros y reducir la caza de herbívoros.
+880	La masiva muerte de herbívoros por hambre es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de alimentos para los herbívoros y reducirse la caza de herbívoros.
+885	La masiva muerte de herbívoros por hambre es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de alimentos para los herbívoros y reducirse la caza de herbívoros.
+890	Desequilibrio más importante ahora: masiva muerte de herbívoros por hambre. Para corregirlo, debe aumentarse la producción de alimentos para los herbívoros y reducirse la caza de herbívoros.
+895	La masiva muerte de herbívoros por hambre es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de alimentos para los herbívoros (comer más). Reducirse la caza de herbívoros (huerte menos).
+900	La masiva muerte de herbívoros por hambre es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de alimentos para los herbívoros (comer más) y reducirse la caza de herbívoros (huerte menos).
+905	Los herbívoros están experimentando una muerte masiva por hambre. Para corregirlo, es necesario aumentar la producción de alimentos, comer más. Reducir la caza de herbívoros, huir menos.
+910	Los herbívoros experimentan una muerte masiva por hambre; para corregirlo, es necesario aumentar la producción de alimentos, comer más. Reducir la caza de herbívoros, huir menos.
+915	"El desequilibrio más importante actualmente es la muerte masiva de herbívoros por hambre. Para corregirlo, es necesario aumentar la producción de alimentos (comer más) y reducirse la caza de herbívoros (huerte menos)."
+920	Los herbívoros sobreviven en muy escasos niveles, lo que resulta en un desequilibrio actual. Para corregirlo, es necesario aumentar la producción de alimentos (comer más) y reducirse la caza de herbívoros (huir menos).
+925	Los herbívoros sobreviven en muy escasos niveles, lo que requiere aumentar la producción de alimentos (comer más) y disminuir la caza de herbívoros (huir menos).
+930	Los herbívoros sufren una muerte masiva por hambre, por lo que se debe aumentar la producción de alimentos (comer más) y reducirse la caza de herbívoros (huir menos).
+935	Desequilibrio más importante ahora: Herbívoros sufren hambre debido a baja producción de alimentos. Para corregirlo, es necesario aumentar la producción de alimentos (comer más).
+940	Los herbívoros sufren hambre debido a baja producción de alimentos. Para corregirlo, es necesario aumentar la producción de alimentos (comer más).
+945	Los herbívoros sufren hambre debido a baja producción de alimentos. Para corregirlo, es necesario aumentar la producción de alimentos (comer más).
+950	Herbívoros sufren hambre debido a la baja producción de alimentos. Para corregirlo, se debe aumentar la producción de alimentos (comer más).
+955	Herbívoros mueren de hambre debido a la baja producción de alimentos. Para corregirlo, es necesario aumentar la producción de alimentos (comer más).
+960	Los herbívoros mueren de hambre debido a la baja producción de alimentos. Para corregirlo, es necesario aumentar la producción de alimentos (comer más).
+965	Los herbívoros sufren una hambre extrema debido a la baja producción de alimentos. Para corregirlo, es necesario aumentar la producción de alimentos (comer más).
+970	"Los herbívoros sufren una hambre extrema debido a la baja producción de alimentos. Para corregirlo, es necesario aumentar la producción de alimentos (comer más)."
+975	Los herbívoros sufren de una hambre extrema debido a una baja producción de alimentos. Para corregirlo, se debe aumentar la producción de alimentos (comer más).
+980	Los herbívoros sufren hambre extrema debido a una baja producción de alimentos. Para corregirlo, se debe aumentar la producción de alimentos (comer más).
+985	Los herbívoros sufren hambre extrema debido a la alta caza por depredadores. Para corregirlo, es necesario disminuir la caza de herbívoros (hacer que los depredadores cazen menos).
+990	Los herbívoros sufren hambre extrema debido a una baja producción de alimentos. Para corregirlo, es necesario aumentar la producción de alimentos (comer más).
+995	Los herbívoros sufren hambre extrema debido a una alta caza por depredadores. Para corregirlo, es necesario disminuir la caza de herbívoros (hacer que los depredadores cazen menos).
+1000	Los depredadores cazan demasiado a los herbívoros, lo que debe corregirse haciendo que los depredadores cazen menos.
+1005	Los depredadores cazan excesivamente a los herbívoros, lo que debe corregirse haciendo que los depredadores cazen menos.
+1010	Los depredadores cazan demasiado a los herbívoros, por lo que se debe reducir la caza de herbívoros en las próximas iteraciones.
+1015	Los herbívoros sufren hambre masiva (mueren_hambre = 10%), por lo que se debe aumentar la cantidad de alimentos disponibles para ellos en las próximas iteraciones.
+1020	Los depredadores cazan excesivamente a los herbívoros. En las próximas iteraciones, se debe reducir la caza de herbívoros por parte de los depredadores.
+1025	Los depredadores cazan demasiado a los herbívoros, por lo que en las próximas iteraciones se debe reducir la caza de herbívoros por parte de los depredadores.
+1030	Los depredadores cazan excesivamente a los herbívoros, se debe reducir la caza en las próximas iteraciones.
+1035	Los depredadores cazan excesivamente a los herbívoros; en las próximas iteraciones, se debe reducir la caza de herbívoros por parte de los depredadores.
+1040	Los depredadores cazan excesivamente a los herbívoros. En las próximas iteraciones, se debe reducir la caza de herbívoros por parte de los depredadores.
+1045	Los herbívoros sufren hambre masiva debido a que mueren de hambre en un 15%, por lo tanto, se debe aumentar la cantidad de comida disponible para ellos en las próximas iteraciones.
+1050	Los herbívoros mueren de hambre en un 14%, por lo tanto, se debe aumentar la cantidad de comida disponible para ellos en las próximas iteraciones.
+1055	Depredadores cazan excesivamente a los herbívoros. Para equilibrar el ecosistema, se debe disminuir la caza de herbívoros por parte de los depredadores en las próximas iteraciones.
+1060	Depredadores cazan excesivamente a los herbívoros. Para corregirlo, debe disminuir la caza de herbívoros por parte de los depredadores en las próximas iteraciones.
+1065	Los herbívoros están mueriendo de hambre más, por lo tanto, se debe aumentar la cantidad de comida disponible para ellos en las próximas iteraciones.
+1070	Depredadores cazan excesivamente a los herbívoros. Para corregirlo, debe disminuir la caza de herbívoros por parte de los depredadores en las próximas iteraciones.
+1075	Los herbívoros mueren de hambre más y se debe aumentar la cantidad de comida disponible para ellos.
+1080	Los herbívoros mueren de hambre más aún, por lo que se debe aumentar la cantidad de comida disponible para ellos en las próximas iteraciones.
+1085	Los herbívoros mueren de hambre más, por lo que se debe aumentar la cantidad de comida disponible para ellos en las próximas iteraciones.
+1090	Los herbívoros sufriden hambre, aumente la cantidad de comida disponible para ellos.
+1095	Los herbívoros sufren hambre más, aumente la cantidad de comida disponible para ellos.
+1100	Los herbívoros sufren hambre más, aumente la cantidad de comida disponible para ellos.
+1105	Los herbívoros tienen una tasa de muerte por hambre demasiado alta (18%), lo que indica que necesitan más comida disponible.
+1110	El rol más inequilibrado actualmente es el de los herbívoros, debido a que la tasa de muerte por hambre es demasiado alta (20%). Para corregirlo, debería aumentarse la cantidad de comida disponible para ellos.
+1115	Los herbívoros sufren hambre demasiado (mueren_hambre=18%), por lo que debería aumentarse la cantidad de comida disponible para ellos.
+1120	Los herbívoros sufren hambre demasiado (mueren_hambre=19%), por lo que debería aumentarse la cantidad de comida disponible para ellos.
+1125	Los herbívoros sufren una muerte por hambre demasiado alta (17%), debe aumentarse la cantidad de comida disponible para ellos.
+1130	Los herbívoros sufren una muerte por hambre demasiado alta (16%), debe aumentarse la cantidad de comida disponible para ellos.
+1135	Herbívoros sufren una muerte por hambre excesiva (18%), debe aumentarse la cantidad de comida disponible para ellos.
+1140	Herbívoros mueren de hambre excesiva, aumente la cantidad de comida disponible para ellos.
+1145	Los herbívoros mueren de hambre excesiva, aumente la cantidad de comida disponible para ellos.
+1150	Los herbívoros sufren una mortalidad excesiva por hambre (20%), necesario aumentar la cantidad de alimento disponible para ellos.
+1155	Los herbívoros mueren en gran número debido a la falta de alimento. Es necesario aumentar la cantidad de alimento disponible para ellos.
+1160	Los herbívoros mueren en gran número debido a la falta de alimento. Para corregirlo, es necesario aumentar la cantidad de alimento disponible para ellos.
+1165	"Los herbívoros mueren en gran número debido a la falta de alimento. Es necesario aumentar la cantidad de alimento disponible para ellos."
+1170	"Los herbívoros mueren en gran número debido a la falta de alimento. Es necesario aumentar la cantidad de alimento disponible para ellos." (Aumentar la cantidad de alimento para los herbívoros)
+1175	Los herbívoros mueren en gran número debido a la falta de alimento. Para corregirlo, es necesario aumentar la cantidad de alimento disponible para ellos.
+1180	Aumentar la cantidad de alimento para los herbívoros para disminuir la tasa de muerte por hambre y permitir que los depredadores tengan suficiente presa para sobrevivir.
+1185	Los herbívoros están experimentando una tasa alta de muerte por hambre. Para corregirlo, se necesita aumentar la cantidad de alimento disponible para ellos.
+1190	Los herbívoros experimentan una tasa alta de muerte por hambre, por lo que se debe aumentar la cantidad de alimento disponible para ellos.
+1195	Los herbívoros experimentan una tasa alta de muerte por hambre. Para corregirlo, se debe aumentar la cantidad de alimento disponible para ellos.
+1200	Herbívoros deben comer más para reducir la tasa de muerte por hambre.
+1205	Los herbívoros mueren de hambre en un alto porcentaje, por lo que es necesario aumentar la cantidad de alimento disponible para ellos.
+1210	Herbívoros mueren de hambre en un alto porcentaje, aumente la cantidad de alimento disponible para ellos.
+1215	Los herbívoros están sufriendo una tasa de muerte por hambre excesiva, por lo que es necesario aumentar la cantidad de alimento disponible para ellos.
+1220	Herbívoros mueren de hambre excesivamente, aumente la cantidad de alimento disponible para ellos.
+1225	"Increase the food supply for herbivores to reduce excessive hunger mortality."
+1230	"Increase the food supply for herbivores to decrease excessive hunger mortality, and reduce the food supply for predators to decrease their hunger mortality."
+1235	"Increase the food supply for herbivores to decrease excessive hunger mortality, and decrease the food supply for predators to reduce their hunger mortality rate."
+1240	Aumentar la cantidad de alimento para los herbívoros para reducir la mortalidad por hambre, y reducir la cantidad de alimento para los depredadores para disminuir su tasa de mortalidad por hambre.
+1245	"Increase food supply for herbivores to reduce excessive hunger mortality (21%) y decrease food supply for predators to reduce hunger mortality rate (30%)."
+1250	"Aumentar la cantidad de alimento para los depredadores para reducir su mortalidad por hambre (31%)."
+1255	"Incrementar la cantidad de alimento para los depredadores para reducir su mortalidad por hambre (32%)."
+1260	"Aumentar la cantidad de alimento para los herbívoros para reducir su mortalidad por hambre (23%)."
+1265	Aumentar la cantidad de alimento para los herbívoros para reducir su mortalidad por hambre y incrementar la cantidad de alimento para los depredadores para disminuir su mortalidad por hambre.
+1270	"Incrementar la cantidad de alimento para los herbívoros para reducir su mortalidad por hambre y disminuir la caza de ellos por los depredadores."
+1275	"Aumentar la cantidad de alimento para los herbívoros y reducir la caza de ellos por los depredadores para disminuir la mortalidad por hambre de los herbívoros y mejorar la supervivencia de los depredadores."
+1280	"Incrementar la cantidad de alimento para los herbívoros para reducir su mortalidad por hambre y disminuir la caza de ellos por los depredadores."
+1285	"Incremente la cantidad de alimento para los depredadores, ya que su mortalidad por hambre es más alta (16%) comparado al 22% de mortalidad de hambre de los herbívoros."
+1290	Incrementar la cantidad de alimento para los herbívoros para reducir su mortalidad por hambre y aumentar la caza de los depredadores para mejorar la supervivencia de los mismos.
+1295	"Para equilibrar el ecosistema, es necesario reducir la caza de herbívoros (cazar menos), lo que debería disminuir la mortalidad por hambre de los depredadores (beber menos) y mejorar su supervivencia (sobrevivir más)."
+1300	"La mortalidad por hambre de los depredadores es demasiado alta, por lo que es necesario disminuir la caza de herbívoros para mejorar la supervivencia de los depredadores."
+1305	"Incremente la caza de herbívoros para mejorar la mortalidad por hambre de los depredadores."
+1310	La mortalidad por hambre de los depredadores es excesiva. Debe disminuir la caza de herbívoros para mejorar su supervivencia.
+1315	"Aumente la caza de herbívoros para reducir la mortalidad por hambre de los depredadores."
+1320	"La mortalidad de herbívoros debido a la caza es demasiado alta. Disminuir la caza de herbívoros es necesario para mejorar su supervivencia."
+1325	Disminuir la caza de herbívoros para mejorar su supervivencia es necesario, alta mortalidad de herbívoros debida a la caza.
+1330	"Increase herbivore survival by reducing hunting, and decrease predator deaths from hunger by increasing their prey intake."
+1335	Incrementar la caza de herbívoros para reducir su muerte por hambre y aumentar la intakción de presas para disminuir la muerte de depredadores debido al hambre.
+1340	Incremente la caza de depredadores para disminuir su muerte por hambre.
+1345	Aumente la caza de depredadores para reducir la muerte de depredadores debido al hambre.
+1350	Incremente la caza de herbívoros para reducir la muerte de depredadores debido al hambre.
+1355	Caza de herbívoros debe disminuir, para reducir la muerte por hambre de depredadores.
+1360	"Aumente la caza de herbívoros para disminuir la muerte por hambre de depredadores."
+1365	Augmente la caza de herbívoros para disminuir la muerte por hambre de depredadores.
+1370	"Augmente la caza de herbívoros para reducir la muerte por hambre de depredadores."
+1375	"Aumente la caza de herbívoros para disminuir la mortalidad por hambre de depredadores, y reduzca la mortalidad por hambre entre los depredadores."
+1380	"Incremente la caza de herbívoros para disminuir la muerte por hambre entre los depredadores, y reduzca la mortalidad por hambre de herbívoros."
+1385	"Incremente la caza de herbívoros para reducir la muerte por hambre entre los depredadores, y aumente la cantidad de alimento para reducir la muerte por hambre de los herbívoros."
+1390	"Aumentar la caza de herbívoros para reducir la muerte por hambre de depredadores."
+1395	"Aumentar la caza de herbívoros para reducir la muerte por hambre de depredadores y aumentar la muerte por hambre de herbívoros para equilibrar la caza y la muerte por hambre en ambos roles."
+1400	"Aumentar la caza de herbívoros para reducir la muerte por hambre de depredadores y mantener el nivel de muerte por hambre de herbívoros para equilibrar la caza y la muerte por hambre en ambos roles."
+1405	Aumentar la caza de herbívoros para reducir la muerte por hambre de depredadores y mantener el nivel de muerte por hambre de herbívoros para equilibrar la caza y la muerte por hambre en ambos roles.
+1410	Para correctar el desequilibrio más importante, necesitamos aumentar la caza de herbívoros para reducir la muerte por hambre de depredadores y mantener el nivel de muerte por hambre de herbívoros.
+1415	Desequilibrio más importante: Los herbívoros sobreviven en bajos niveles (34%), por lo que se necesita aumentar su caza para mantener la supervivencia en las próximas iteraciones.
+1420	Desequilibrio más importante: Los herbívoros sobreviven a un nivel bajo (34%). Para corregirlo, debería aumentarse la caza de herbívoros en las próximas iteraciones.
+1425	Para corregir el desequilibrio más importante, se debe aumentar la caza de herbívoros para reducir la muerte por hambre de depredadores y mantener el nivel de muerte por hambre de herbívoros aceptable.
+1430	Desequilibrio más importante: La muerte por hambre de herbívoros es demasiado elevada en un 18%. Para corregirlo, se debe reducir la caza de herbívoros en las próximas iteraciones.
+1435	La muerte por hambre de herbívoros es demasiado elevada en un 17%, por lo que se debe reducir la caza de herbívoros en las próximas iteraciones.
+1440	La muerte por hambre de herbívoros (19%) es el desequilibrio más importante. Para corregirlo, debe aumentarse la caza de herbívoros en las próximas iteraciones.
+1445	La muerte por hambre de herbívoros (18%) sigue siendo el desequilibrio más importante. Para corregirlo, debe disminuirse la caza de herbívoros en las próximas iteraciones.
+1450	"La muerte por hambre de herbívoros (19%) sigue siendo el desequilibrio más importante. Para corregirlo, debe disminuirse la caza de herbívoros en las próximas iteraciones."
+1455	La muerte por hambre de herbívoros (20%) sigue siendo el desequilibrio más importante. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros.
+1460	"La muerte por hambre de herbívoros (19%) sigue siendo el desequilibrio más importante. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros."
+1465	"La muerte por hambre de herbívoros (19%) sigue siendo el desequilibrio más importante. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros."
+1470	"La muerte por hambre de herbívoros (19%) sigue siendo el desequilibrio más importante. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros."
+1475	"El desequilibrio más importante ahora es la alta tasa de muerte por hambre de herbívoros (20%). Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros."
+1480	"La alta tasa de muerte por hambre de herbívoros (20%) sigue siendo el desequilibrio más importante. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros."
+1485	"La alta tasa de muerte por hambre de herbívoros (19%) sigue siendo el desequilibrio más importante. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros."
+1490	"La alta tasa de muerte por hambre de los herbívoros (21%) es el desequilibrio más importante. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros."
+1495	"La alta tasa de muerte por hambre de los herbívoros (21%) sigue siendo el desequilibrio más importante. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros."
+1500	"La alta tasa de muerte por hambre de los herbívoros (20%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros."
+1505	La alta tasa de muerte por hambre de los herbívoros (20%) sigue siendo el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros.
+1510	"La alta tasa de muerte por hambre de los herbívoros (22%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros."
+1515	La alta tasa de muerte por hambre de los herbívoros (20%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros.
+1520	La alta tasa de muerte por hambre de los herbívoros (22%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros.
+1525	La alta tasa de muerte por hambre de los herbívoros (20%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros.
+1530	La alta tasa de muerte por hambre de los herbívoros (18%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros.
+1535	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (17%). Para corregirlo, se debe aumentar la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1540	La alta tasa de muerte por hambre de los herbívoros (19%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1545	La alta tasa de muerte por hambre de los herbívoros (20%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1550	La alta tasa de muerte por hambre de los herbívoros (21%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1555	La alta tasa de muerte por hambre de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1560	Los herbívoros experimentan una alta tasa de muerte por hambre (22%). Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1565	La alta tasa de muerte por hambre de los herbívoros (20%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1570	La alta tasa de muerte por hambre de los herbívoros (21%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1575	La alta tasa de muerte por hambre de los herbívoros (20%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1580	La alta tasa de muerte por hambre de los herbívoros (19%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1585	Alta tasa de muerte por hambre de los herbívoros (19%). Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1590	La alta tasa de muerte por hambre de los herbívoros (21%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1595	La alta tasa de muerte por hambre de los herbívoros (21%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1600	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (20%). Para corregirlo, se debe aumentar la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1605	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (19%). Para corregirlo, se debe aumentar la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1610	La alta tasa de muerte por hambre de los herbívoros (20%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1615	La alta tasa de muerte por hambre de los herbívoros (22%) es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1620	La alta tasa de muerte por hambre de los herbívoros (18%) es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1625	La alta tasa de muerte por hambre de los herbívoros (18%) es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1630	La alta tasa de muerte por hambre de los herbívoros (15%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1635	La alta tasa de muerte por hambre de los herbívoros (17%) es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1640	La alta tasa de muerte por hambre de los herbívoros (16%) es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1645	La alta tasa de muerte por hambre de los herbívoros (19%) es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la disponibilidad de alimento para los herbívoros en las próximas iteraciones.
+1650	El desequilibrio más importante actualmente es la alta tasa de muerte por hambre de los herbívoros (23%). Para corregirlo, se debe aumentar la disponibilidad de alimento para los herbívoros en las próximas iteraciones, lo que puede implicar reducir la cantidad de depredadores o incrementar la produc
+1655	La alta tasa de muerte por hambre de los herbívoros (24%) es el desequilibrio más importante ahora. Para corregirlo, se debe incrementar la producción de alimento para los herbívoros en las próximas iteraciones, lo que puede implicar reducir la cantidad de depredadores.
+1660	La alta tasa de muerte por hambre de los herbívoros (24%) es el desequilibrio más importante ahora. Para corregirlo, se debe incrementar la producción de alimento para los herbívoros en las próximas iteraciones, lo que puede implicar reducir la cantidad de depredadores.
+1665	"La tasa más alta de muerte por hambre de los herbívoros (25%) es el desequilibrio más importante ahora. Para corregirlo, debe incrementarse la producción de alimento para los herbívoros, lo que puede implicar reducir la cantidad de depredadores."
+1670	La tasa más alta de muerte por hambre de los herbívoros (24%) es el desequilibrio más importante ahora. Para corregirlo, debe incrementarse la producción de alimento para los herbívoros, lo que implica reducir la cantidad de depredadores.
+1675	La tasa más alta de muerte por hambre de los herbívoros (22%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de alimento para los herbívoros, lo que implica reducir la cantidad de depredadores.
+1680	"La tasa más alta de muerte por hambre de los herbívoros (21%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de alimento para los herbívoros, lo que implica reducir la cantidad de depredadores."
+1685	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (20%). Para corregirlo, se debe aumentar la producción de alimento para los herbívoros, lo que implica reducir la cantidad de depredadores.
+1690	La alta tasa de muerte por hambre de los herbívoros (21%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de alimento para los herbívoros, lo que implica reducir la cantidad de depredadores.
+1695	La alta tasa de muerte por hambre de los herbívoros (20%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de alimento para los herbívoros, lo que implica reducir la cantidad de depredadores. (Herbívoros: menciona beber menos; Depredadores: menciona cazar meno
+1700	La alta tasa de muerte por hambre de los herbívoros (19%) es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de alimento para los herbívoros, lo que implica reducir la cantidad de depredadores y permite que los herbívoros beban menos.
+1705	La alta tasa de muerte por hambre de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de alimento para los herbívoros, lo que implica que los herbívoros deben beber menos y reducir la cantidad de depredadores.
+1710	La alta tasa de muerte por hambre de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, la producción de alimento para los herbívoros debe aumentarse, lo que implica que los herbívoros deben beber menos y reducir la cantidad de depredadores.
+1715	La alta tasa de muerte por hambre de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, la producción de alimento para los herbívoros debe aumentarse, lo que implica que los herbívoros deben beber menos.
+1720	La alta tasa de muerte por hambre de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, la producción de alimento para los herbívoros debe aumentarse, lo que implica que los herbívoros deben beber menos.
+1725	Los herbívoros mueren de hambre en exceso, lo que requiere aumentar la producción de alimento, por lo que deben beber menos.
+1730	Los herbívoros mueren de hambre en exceso, lo que requiere aumentar la producción de alimento, por lo que deben beber menos.
+1735	Los herbívoros mueren de hambre en exceso, por lo que deben aumentar la producción de alimento, lo que implica que deben beber menos.
+1740	Los herbívoros están sufriendo inanición masiva, por lo que debe aumentarse la producción de alimento, lo que implica que deben beber menos.
+1745	Los herbívoros mueren de hambre en exceso; para corregirlo, deben aumentar la producción de alimento, lo que implica que deben comer más.
+1750	Herbívoros mueren de hambre en exceso; debe aumentarse la producción de alimento, lo que implica que deben comer más.
+1755	Los herbívoros mueren en exceso de hambre; debe aumentarse la producción de alimento, lo que implica que deben comer más.
+1760	Los herbívoros mueren en exceso de hambre; debe aumentarse la producción de alimento, lo que implica que deben comer más.
+1765	Los herbívoros mueren en exceso de hambre; debe aumentarse la producción de alimento, lo que implica que deben comer más.
+1770	"Los herbívoros mueren en exceso de hambre, debe aumentarse la producción de alimento, lo que implica que deben comer más."
+1775	"Los herbívoros mueren en exceso de hambre; debe aumentarse la producción de alimento, lo que implica que deben comer más." (Aumentar la producción de alimento para los herbívoros).
+1780	Los herbívoros mueren de hambre en exceso; debe aumentarse la producción de alimento, lo que implica que deben comer más.
+1785	Los herbívoros mueren de hambre en exceso; debe aumentarse la producción de alimento, lo que implica que deben comer más.
+1790	Los herbívoros están sufriendo de inanición masiva, por lo que debe aumentarse la producción de alimento, lo que implica que deben comer más.
+1795	Los herbívoros sufren de inanición masiva, por lo que es necesario aumentar la producción de alimentos, lo que implica que deben comer más.
+1800	Los herbívoros sufren de inanición masiva, debe aumentarse la producción de alimentos y que los herbívoros coman más.
+1805	Los herbívoros están sufriendo de inanición masiva; es necesario aumentar la producción de alimentos y que los herbívoros coman más.
+1810	Los herbívoros están sufriendo de hambre masiva; es necesario aumentar la producción de alimentos y que los herbívoros coman más.
+1815	Los herbívoros sufren de hambre masiva; es necesario aumentar la producción de alimentos y que los herbívoros coman más.
+1820	Los herbívoros sufren de hambre masiva; debe aumentarse la producción de alimentos y incentivarse que los herbívoros coman más.
+1825	Los herbívoros están sufriendo de hambre masiva; debe aumentarse la producción de alimentos y incentivarse que los herbívoros coman más.
+1830	"Los herbívoros están sufriendo de hambre masiva; debe incentivarse que coman más al aumentar la producción de alimentos."
+1835	Los herbívoros sufren de inanición masiva; debe incentivarse que coman más al aumentar la producción de alimentos.
+1840	"Los herbívoros sufren de inanición masiva, debe incentivarse que coman más al aumentar la producción de alimentos."
+1845	"Incremente la producción de alimentos para los herbívoros, ya que un 16% está sufriendo hambre masiva."
+1850	Los herbívoros deben incentivarse a comer más para reducir la tasa de hambre masiva del 16%.
+1855	Los herbívoros deben incrementar su consumo para reducir la tasa de hambre masiva (16%).
+1860	Aumente la tasa de sobrevivencia de los herbívoros, incentivando que coman más (incrementar su consumo).
+1865	Herbívoros deben aumentar su consumo para reducir la tasa de muerte debida a hambre (19%).
+1870	Los herbívoros sufren una tasa más alta de muerte debida a la hambre (22%). Para corregir esto, se debe aumentar su consumo.
+1875	Herbívoros deben incrementar su consumo para reducir la alta tasa de muerte por hambre (23%).
+1880	Herbívoros deben aumentar su consumo para reducir la tasa alta de muerte por hambre (22%).
+1885	Herbívoros deben aumentar su consumo para reducir la tasa alta de muerte por hambre (22%).
+1890	Predadores deben disminuir su consumo para reducir la alta tasa de muerte de herbívoros por hambre.
+1895	Herbívoros deben aumentar su consumo para reducir la tasa alta de muerte por hambre.
+1900	Herbívoros deben disminuir su consumo para reducir la alta tasa de muerte por hambre.
+1905	Los herbívoros están sufriendo una alta tasa de muerte por hambre. Para corregirlo, deben aumentar su consumo.
+1910	Los herbívoros están sufriendo una alta tasa de muerte por hambre, por lo que deben aumentar su consumo.
+1915	Los herbívoros sufren una alta tasa de muerte por hambre, por lo que deben aumentar su consumo.
+1920	Herbívoros: deben aumentar el consumo para disminuir la tasa de muerte por hambre. (Aumentar su consumo significa que deben comer más para sobrevivir mejor.)
+1925	Los herbívoros están sufriendo una alta tasa de muerte por hambre, necesitan aumentar su consumo.
+1930	Los herbívoros sufren una alta tasa de muerte por hambre. Para corregirlo, deben aumentar su consumo.
+1935	Los herbívoros deben aumentar su consumo para reducir la tasa de muerte por hambre.
+1940	Los herbívoros sufren una alta tasa de muerte por hambre. Para reducirlo, deben aumentar su consumo.
+1945	Los herbívoros sufren una alta tasa de muerte por hambre. Para corregirlo, deben aumentar su consumo.
+1950	Los herbívoros sufren una alta tasa de muerte por hambre debido a su bajo consumo. Para corregirlo, aumentar el consumo de herbívoros es esencial.
+1955	Los herbívoros mueren de hambre en exceso, por lo que debe aumentarse su consumo.
+1960	Los herbívoros sufren una alta tasa de muerte por hambre, por lo que debe aumentarse su consumo.
+1965	Los herbívoros sufren una alta tasa de muerte por hambre, por lo que debe aumentarse su consumo.
+1970	Los herbívoros mueren de hambre en exceso; debe aumentarse su consumo.
+1975	Los herbívoros mueren de hambre en exceso; debe aumentarse su consumo.
+1980	Los herbívoros mueren de hambre en exceso; debe aumentarse su consumo.
+1985	"El excesivo hambre entre los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse su consumo."
+1990	Los herbívoros mueren de hambre en exceso; debe aumentarse su consumo.
+1995	Los herbívoros mueren de hambre en exceso; debe aumentarse su consumo.

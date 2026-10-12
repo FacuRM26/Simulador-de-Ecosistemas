@@ -1,0 +1,13 @@
+{
+    "run": 3,
+    "seed": 1007,
+    "modes": [
+        "behavior_selector",
+        "reward_shaping"
+    ],
+    "arguments": {
+        "num_iters": 2000,
+        "llm_model": "mistral",
+        "shape_interval": 5
+    }
+}
