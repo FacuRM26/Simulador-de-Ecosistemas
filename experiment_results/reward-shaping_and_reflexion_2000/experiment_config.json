@@ -1,0 +1,19 @@
+{
+    "modes": [
+        "reflexion",
+        "reward_shaping"
+    ],
+    "num_runs": 3,
+    "base_seed": 1005,
+    "seeds": [
+        1005,
+        1006,
+        1007
+    ],
+    "tail_iters": 100,
+    "orchestrator_arguments": {
+        "num_iters": 2000,
+        "llm_model": "mistral",
+        "shape_interval": 5
+    }
+}

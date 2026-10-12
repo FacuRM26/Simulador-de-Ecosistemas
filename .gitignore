@@ -12,6 +12,7 @@ __pycache__/
 
 # Salidas del proyecto
 monitor.csv
+monitor_*.csv
 outputs/
 results/
 checkpoints/

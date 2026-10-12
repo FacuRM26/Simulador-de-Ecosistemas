@@ -1,7 +1,7 @@
 """
-Módulo de entrenamiento RL
+Módulo de entrenamiento RL.
 """
 from .callbacks import PerAgentAndReasonMetrics
-from .trainer import main
+from .orchestrator import run_training, TrainingOrchestrator
 
-__all__ = ["PerAgentAndReasonMetrics", "main"]
+__all__ = ["PerAgentAndReasonMetrics", "run_training", "TrainingOrchestrator"]

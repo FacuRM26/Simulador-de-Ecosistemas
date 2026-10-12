@@ -1,0 +1,12 @@
+{
+    "run": 2,
+    "seed": 1006,
+    "modes": [
+        "behavior_selector"
+    ],
+    "arguments": {
+        "num_iters": 2000,
+        "llm_model": "mistral",
+        "shape_interval": 5
+    }
+}

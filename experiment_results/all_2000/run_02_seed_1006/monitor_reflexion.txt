@@ -1,0 +1,400 @@
+0	Los herbívoros están experimentando una tasa alta de muerte por hambre, lo que indica que debería producirse un aumento en la cantidad de comida disponible para ellos.
+5	Los herbívoros mueren de hambre en exceso, aumente la cantidad de alimento disponible para ellos.
+10	Los herbívoros están experimentando una tasa alta de muerte por hambre, lo que indica que debería producirse un aumento en la cantidad de alimento disponible para ellos. Para corregirlo, debería incrementarse la cantidad de comida para los herbívoros.
+15	Los herbívoros están experimentando una tasa alta de muerte por hambre; se debe incrementar la cantidad de comida para corregirlo.
+20	Los herbívoros experimentan una alta tasa de muerte por hambre; debe incrementarse la cantidad de comida disponible para ellos.
+25	Los herbívoros experimentan una alta tasa de muerte por hambre. Debe aumentar la cantidad de comida disponible para ellos.
+30	"Herbívoros deben comer más para reducir la tasa de muerte por hambre."
+35	"Los herbívoros mueren de hambre en exceso, necesario aumentar la cantidad de comida disponible para ellos."
+40	Los herbívoros mueren de hambre en exceso; necesario aumentar la cantidad de comida disponible para ellos.
+45	Los herbívoros mueren de hambre en exceso; necesario aumentar la cantidad de comida disponible para ellos.
+50	Los herbívoros sufren una tasa de muerte excesiva por hambre, debe aumentarse la cantidad de alimento disponible para ellos.
+55	Los herbívoros mueren de hambre en exceso, debe aumentarse la cantidad de alimento disponible para ellos.
+60	Los herbívoros sufren hambre en exceso. Debe aumentarse la cantidad de alimento disponible para ellos.
+65	Los herbívoros sufren una tasa de muerte excesiva por hambre. Para corregirlo, se debe aumentar la cantidad de alimento disponible para ellos.
+70	Los herbívoros sufren una tasa de muerte excesiva por hambre; debe aumentarse la cantidad de alimento disponible para ellos.
+75	Los herbívoros sufren hambre en exceso, por lo que debe aumentarse la cantidad de alimento disponible para ellos.
+80	Los herbívoros sufren hambre en exceso, por lo que debe aumentarse la cantidad de alimento disponible para ellos.
+85	Herbívoros: Debe aumentarse la cantidad de alimento disponible para reducir la tasa de muerte por hambre.
+90	Desequilibrio más importante: Los herbívoros sufren hambre en exceso. Para corregirlo, debe aumentarse la cantidad de alimento disponible para ellos.
+95	Los herbívoros sufren hambre en exceso. Para corregirlo, debe aumentarse la cantidad de alimento disponible para ellos.
+100	Los herbívoros sufren hambre en exceso. Para corregirlo, debe aumentarse la cantidad de alimento disponible para ellos.
+105	Aumentar la cantidad de alimento disponible para los herbívoros para corregir el desequilibrio más importante, ya que sufriden hambre en exceso.
+110	La situación más crítica actualmente es la inanición masiva de los herbívoros, por lo que debe aumentarse la cantidad de alimento disponible para ellos, lo que podría lograrse fomentando la creciente de las plantas.
+115	Los herbívoros sufren hambre en exceso, necesita aumentar la cantidad de alimento disponible para ellos, lo que puede lograrse fomentando la creciente de las plantas.
+120	Increíblemente, los herbívoros sufren hambre en exceso. Para corregir el desequilibrio, debe aumentar la cantidad de alimento disponible para ellos mediante la creciente de las plantas.
+125	La inanición masiva de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe fomentar la creciente de las plantas (comer más).
+130	La inanición masiva de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la cantidad de alimento disponible para ellos mediante la creciente de las plantas (comer más).
+135	La inanición masiva de los herbívoros es el desequilibrio más importante ahora. Debe fomentar la creciente de las plantas (comer más) para aliviar la hambruna de los herbívoros.
+140	La inanición masiva de los herbívoros es el desequilibrio más importante ahora. Debe fomentar la creciente de las plantas (comer más) para aliviar la hambruna de los herbívoros.
+145	La inanición masiva de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la cantidad de alimento disponible para ellos mediante la creciente de las plantas (comer más).
+150	La inanición masiva de los herbívoros es el desequilibrio más importante ahora. Debe aumentar la cantidad de alimento disponible para ellos mediante la creciente de las plantas (comer más).
+155	La inanición masiva de los herbívoros es el desequilibrio más importante ahora. Debe aumentar la cantidad de alimento disponible para ellos mediante la creciente de las plantas (comer más).
+160	La inanición masiva de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la cantidad de alimento disponible para ellos mediante la creciente de las plantas (comer más).
+165	El desequilibrio más importante ahora es la inanición masiva de los herbívoros. Debe aumentar la cantidad de alimento disponible para ellos mediante la creciente de las plantas (comer más).
+170	El desequilibrio más importante ahora es la inanición masiva de los herbívoros. Para corregirlo, debe aumentar la cantidad de alimento disponible para ellos mediante la creciente de las plantas (comer más).
+175	El desequilibrio más importante ahora es la inanición masiva de los herbívoros. Para corregirlo, debe aumentar la cantidad de alimento disponible para ellos mediante la creciente de las plantas (comer más).
+180	La inanición masiva de los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, es necesario aumentar la cantidad de alimento disponible, fomentando la creciente de las plantas.
+185	Los herbívoros sufren una inanición masiva, por lo que debe aumentar la cantidad de alimento disponible mediante la creciente de las plantas (comer más).
+190	Los herbívoros sufren una inanición masiva, por lo que debe aumentar la cantidad de alimento disponible mediante la creciente de las plantas (comer más).
+195	Los herbívoros sufren una inanición masiva, por lo que debe aumentar la cantidad de alimento disponible mediante la creciente de las plantas (comer más).
+200	Los herbívoros sufren hambre a gran escala, por lo que debe aumentar la cantidad de alimento disponible mediante la creciente de las plantas (comer más).
+205	Los herbívoros sufren una hambre a gran escala, por lo que debe aumentar la cantidad de alimento disponible mediante la creciente de las plantas (comer más).
+210	Los herbívoros sufren una hambre a gran escala; debe aumentar la cantidad de alimento disponible mediante la creciente de las plantas (comer más).
+215	Desequilibrio más importante ahora: La cantidad de herbívoros que mueren de hambre es demasiado alta (18%). La estrategia para corregirlo en las próximas iteraciones es aumentar la producción de plantas, lo que puede lograrse mediante un aumento en la cantidad de herbívoros.
+220	Desequilibrio más importante ahora: La muerte de hambre de los herbívoros sigue siendo demasiado alta (14%). La estrategia para corregirlo en las próximas iteraciones es aumentar la producción de plantas, lo que se puede lograr mediante un aumento en la cantidad de herbívoros.
+225	La muerte de hambre de los herbívoros sigue siendo demasiado alta (14%). La estrategia para corregirlo en las próximas iteraciones es aumentar la producción de plantas, lo que se puede lograr mediante un aumento en la cantidad de herbívoros.
+230	El desequilibrio más importante ahora es la alta tasa de muerte de hambre de los herbívoros (14%). La estrategia para corregirlo en las próximas iteraciones es aumentar la producción de plantas mediante un aumento en la cantidad de herbívoros.
+235	La tasa de muerte de hambre de los herbívoros (16%) es el desequilibrio más importante actualmente. La estrategia para corregirlo en las próximas iteraciones es aumentar la producción de plantas mediante un aumento en la cantidad de herbívoros (comer más).
+240	El desequilibrio más importante actualmente es la alta tasa de muerte de hambre de los herbívoros (15%). Para corregirlo en las próximas iteraciones, se debería aumentar la producción de plantas mediante un aumento en la cantidad de herbívoros (comer más).
+245	El desequilibrio más importante actualmente es la alta tasa de muerte de hambre de los herbívoros (13%). Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas mediante un aumento en la cantidad de herbívoros (comer más).
+250	El desequilibrio más importante actualmente es la alta tasa de muerte de hambre de los herbívoros (11%). Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas mediante un aumento en la cantidad de herbívoros (comer más).
+255	El desequilibrio más importante ahora es la alta tasa de muerte de hambre de los herbívoros (8%). Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas mediante un aumento en la cantidad de herbívoros (comer más).
+260	El desequilibrio más importante actualmente es la alta tasa de muerte de hambre de los herbívoros (8%). Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas mediante un aumento en la cantidad de herbívoros (comer más).
+265	El desequilibrio más importante ahora es la alta tasa de muerte de hambre de los herbívoros (8%). Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas mediante un aumento en la cantidad de herbívoros (comer más).
+270	La alta tasa de muerte de hambre de los herbívoros (12%) debe ser corregida en las próximas iteraciones aumentando la producción de plantas mediante un aumento en la cantidad de herbívoros (comer más).
+275	La alta tasa de muerte de hambre de los herbívoros (13%) debe ser corregida aumentando la cantidad de herbívoros para aumentar la producción de plantas.
+280	La alta tasa de muerte de hambre de los herbívoros (12%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+285	Los herbívoros están experimentando una alta tasa de muerte por hambre (10%), por lo que en las próximas iteraciones se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+290	La alta tasa de muerte por hambre de los herbívoros (11%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+295	La alta tasa de muerte por hambre de los herbívoros (10%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+300	Los herbívoros experimentan alta tasa de muerte por hambre (11%), por lo que en las próximas iteraciones se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+305	La alta tasa de muerte por hambre de los herbívoros (11%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+310	La alta tasa de muerte por hambre de los herbívoros (12%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+315	La alta tasa de muerte por hambre de los herbívoros (12%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+320	La alta tasa de muerte por hambre de los herbívoros (11%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+325	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (10%). Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros y aumentar la producción de plantas.
+330	La alta tasa de muerte por hambre de los herbívoros (12%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+335	La alta tasa de muerte por hambre de los herbívoros (11%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+340	La alta tasa de muerte por hambre de los herbívoros (12%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+345	La alta tasa de muerte por hambre de los herbívoros (14%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+350	La alta tasa de muerte por hambre de los herbívoros (14%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+355	La alta tasa de muerte por hambre de los herbívoros (14%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+360	La alta tasa de muerte por hambre de los herbívoros (11%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+365	La alta tasa de muerte por hambre de los herbívoros (10%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+370	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (14%). Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para aumentar la producción de plantas (comer más).
+375	El desequilibrio más importante actualmente es la alta tasa de muerte por hambre de los herbívoros (15%). Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para que coman más y aumenten la producción de plantas.
+380	El desequilibrio más importante actualmente es la alta tasa de muerte por hambre de los herbívoros (15%). Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para que coman más y aumenten la producción de plantas.
+385	El desequilibrio más importante actualmente es la alta tasa de muerte por hambre de los herbívoros (15%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de herbívoros para que coman más y aumenten la producción de plantas.
+390	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (13%). Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para que coman más y aumenten la producción de plantas.
+395	La alta tasa de muerte por hambre de los herbívoros (13%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de herbívoros para que coman más y aumenten la producción de plantas.
+400	La alta tasa de muerte por hambre de los herbívoros (12%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de herbívoros para que coman más y aumenten la producción de plantas.
+405	Aumente la cantidad de herbívoros para reducir la tasa alta de muerte por hambre (10%) y aumentar la producción de plantas.
+410	La alta tasa de muerte por hambre de los herbívoros (11%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de herbívoros y, si es necesario, disminuir la cantidad de depredadores.
+415	La tasa más alta de muerte por hambre de los herbívoros (11%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de herbívoros.
+420	La tasa más alta de muerte por hambre de los herbívoros (11%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de herbívoros.
+425	La tasa más alta de muerte por hambre de los herbívoros (9%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de herbívoros.
+430	La tasa más alta de muerte por hambre de los herbívoros (10%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de herbívoros.
+435	La tasa más alta de muerte por hambre de los herbívoros (11%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de herbívoros.
+440	La tasa más alta de muerte por hambre de los herbívoros (12%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de herbívoros.
+445	El desequilibrio más importante actualmente es la tasa alta de muerte por hambre de los herbívoros (12%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de herbívoros.
+450	El desequilibrio más importante actualmente es la tasa alta de muerte por hambre de los herbívoros (11%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de herbívoros.
+455	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (12%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de herbívoros.
+460	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (13%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+465	Ahora el desequilibrio más importante es la alta tasa de muerte por hambre de los herbívoros (13%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+470	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (13%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+475	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (13%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+480	Los herbívoros sufren una alta tasa de muerte por hambre (12%), necesitan aumentar la cantidad de alimentos disponibles para suvivir.
+485	La alta tasa de muerte por hambre de los herbívoros (13%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+490	La alta tasa de muerte por hambre de los herbívoros (10%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+495	El desequilibrio más importante actualmente es la alta tasa de muerte por hambre de los herbívoros (10%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+500	El desequilibrio más importante actualmente es la alta tasa de muerte por hambre de los herbívoros (11%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+505	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (14%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+510	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (14%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+515	Los herbívoros están sufriendo una alta tasa de muerte por hambre (14%), por lo que en las próximas iteraciones debería aumentarse la cantidad de alimentos disponibles para ellos.
+520	La alta tasa de muerte por hambre de los herbívoros (14%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+525	El desequilibrio más importante actualmente es la alta tasa de muerte por hambre de los herbívoros (11%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+530	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros (11%). Para corregirlo en las próximas iteraciones, debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+535	La alta tasa de muerte por hambre de los herbívoros (10%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+540	La alta tasa de muerte por hambre de los herbívoros (10%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de alimentos disponibles para los herbívoros.
+545	La alta tasa de muerte por hambre de los herbívoros (10%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de alimentos disponibles para los herbívoros, lo que podría lograrse al reducir la cantidad de depredadores o aumentar l
+550	La tasa de muerte por hambre de los herbívoros (10%) es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de alimentos disponibles para los herbívoros, lo que podría lograrse al reducir la cantidad de depredadores.
+555	"La alta tasa de muerte por hambre de los herbívoros (10%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de alimentos disponibles para los herbívoros, lo que puede lograrse reduciendo la cantidad de depredadores."
+560	La alta tasa de muerte por hambre de los herbívoros (10%) es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de alimentos disponibles para los herbívoros, lo que puede lograrse reduciendo la cantidad de depredadores.
+565	La alta tasa de muerte por hambre de los herbívoros es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe incrementar la cantidad de alimentos disponibles para los herbívoros, lo que puede lograrse reduciendo la cantidad de depredadores.
+570	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros, que debe corregirse aumentando la cantidad de alimentos disponibles para ellos, lo que se puede lograr reduciendo la cantidad de depredadores.
+575	El desequilibrio más importante actualmente es la alta tasa de muerte por hambre de los herbívoros, que debe corregirse aumentando la cantidad de alimentos disponibles para ellos, lo que se puede lograr reduciendo la cantidad de depredadores (reducir caza de herbívoros).
+580	La alta tasa de muerte por hambre de los herbívoros es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe incrementar la cantidad de alimentos disponibles para los herbívoros, lo que puede lograrse reduciendo la cantidad de depredadores (reducir caza de
+585	La alta tasa de muerte por hambre de los herbívoros es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de alimentos disponibles para los herbívoros, lo que puede lograrse reduciendo la caza de herbívoros.
+590	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros, que debe corregirse aumentando la cantidad de alimentos disponibles para ellos, lo que se puede lograr reduciendo la caza de herbívoros.
+595	El desequilibrio más importante actualmente es la alta tasa de muerte por hambre de los herbívoros. Para corregirlo en las próximas iteraciones, se debe aumentar la cantidad de alimentos disponibles para ellos, lo que se puede lograr reduciendo la caza de herbívoros.
+600	La alta tasa de muerte por hambre de los herbívoros es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, se debe reducir la caza de herbívoros.
+605	El desequilibrio más importante ahora es la alta tasa de muerte por hambre de los herbívoros. Para corregirlo en las próximas iteraciones, se debe reducir la caza de herbívoros.
+610	Alta tasa de muerte por hambre de los herbívoros. Reducir la caza de herbívoros para aumentar la cantidad de alimentos disponibles.
+615	Alta tasa de muerte por hambre de los herbívoros. Reducir la caza de herbívoros para aumentar la cantidad de alimentos disponibles.
+620	La alta tasa de muerte por hambre de los herbívoros es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe reducirse la caza de herbívoros para aumentar la cantidad de alimentos disponibles.
+625	La alta tasa de muerte por hambre entre los herbívoros es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe reducir la caza de herbívoros para aumentar la cantidad de alimentos disponibles.
+630	Alta tasa de muerte por hambre de los herbívoros; reduce la caza de herbívoros para aumentar la cantidad de alimentos disponibles.
+635	Alta tasa de muerte por hambre de los herbívoros; reducir la caza de herbívoros para aumentar la cantidad de alimentos disponibles.
+640	Alta tasa de muerte por hambre de los herbívoros; reduce la caza de herbívoros para aumentar la cantidad de alimentos disponibles.
+645	Reduzca la caza de herbívoros para aumentar la cantidad de alimentos disponibles y, a continuación, aumente la tasa de muerte por hambre de los depredadores, haciéndolos beber más.
+650	Caza de herbívoros debe reducirse para aumentar la cantidad de alimentos disponibles, lo que reducirá la tasa de muerte por hambre de los herbívoros.
+655	Aumentar la caza de herbívoros para mejorar la disponibilidad de alimentos y reducir la tasa de muerte por hambre de los depredadores.
+660	Aumentar la caza de herbívoros para reducir la tasa de muerte por hambre de los depredadores.
+665	Herbívoros: Inanición masiva persiste (mueren_hambre=10%). Para corregirlo, se debe reducir la caza de herbívoros.
+670	Herbívoros: Reducir la caza para evitar la muerte por hambre, aumentar sobreviven_hambre.
+675	Aumente la caza de depredadores para disminuir la muerte por hambre de los herbívoros.
+680	Aumente la caza de depredadores para reducir la muerte por hambre de los herbívoros.
+685	Aumente la caza de depredadores para disminuir la muerte por hambre de los herbívoros.
+690	Aumente la caza de depredadores para reducir la muerte por hambre de los herbívoros.
+695	Reducir la caza de depredadores para disminuir la muerte por hambre de los herbívoros.
+700	Aumente la caza de depredadores para disminuir la muerte por hambre de los herbívoros.
+705	"Aumente la caza de depredadores para disminuir la muerte por hambre de los herbívoros."
+710	Reduzca la caza de depredadores para disminuir la muerte por hambre de los herbívoros.
+715	"Incremente la caza de depredadores para reducir la muerte por hambre de los herbívoros y mejorar la supervivencia de ambos roles."
+720	"Incremente la caza de depredadores para disminuir la sobrevivencia de los depredadores y reducir la presión sobre los herbívoros."
+725	"Aumente la caza de depredadores para mejorar la supervivencia de los herbívoros."
+730	"Incremente la caza de depredadores para reducir la sobrevivencia de los depredadores y disminuir la presión sobre los herbívoros."
+735	"Incremente la caza de depredadores para reducir su sobrevivencia y aliviar la presión sobre los herbívoros."
+740	"Incremente la caza de depredadores para reducir su sobrevivencia y aliviar la presión sobre los herbívoros." (depredadores: menor sobrevivencia)
+745	"Incremente la caza de depredadores para aumentar su mortalidad y reducir la presión sobre los herbívoros."
+750	"Aumente la caza de depredadores para reducir su sobrevivencia y aliviar la presión sobre los herbívoros (depredadores: menor sobrevivencia)."
+755	Aumente la caza de depredadores para reducir su sobrevivencia y aliviar la presión sobre los herbívoros (depredadores: menor sobrevivencia).
+760	Aumente la caza de depredadores para reducir su sobrevivencia y aliviar la presión sobre los herbívoros (depredadores: mayor sobrevivencia).
+765	Reduce la caza de depredadores para aumentar su sobrevivencia y aliviar la presión sobre los herbívoros (depredadores: mayor sobrevivencia).
+770	Reduce la caza de depredadores para aliviar la presión sobre los herbívoros (depredadores: menor sobrevivencia).
+775	"Reducir la caza de depredadores es necesaria para aliviar la presión sobre los herbívoros y corregir el desequilibrio actual."
+780	"Reducir la caza de depredadores es necesaria para aliviar la presión sobre los herbívoros y corregir el actual desequilibrio, aumentando la sobrevivencia de los herbívoros y disminuyendo la caza de ellos."
+785	"La presión sobre los herbívoros es excesiva y se debe reducir la caza de depredadores, aumentando la sobrevivencia de los herbívoros."
+790	"La excesiva presión sobre los herbívoros es el desequilibrio más importante ahora. Para corregirlo, es necesario aumentar la caza de depredadores."
+795	La excesiva presión sobre los herbívoros es el desequilibrio más importante ahora. Para corregirlo, es necesario reducir la caza de depredadores, aumentando la sobrevivencia de los herbívoros.
+800	La excesiva presión sobre los herbívoros es el desequilibrio más importante ahora. Para corregirlo, es necesario reducir la caza de depredadores, aumentando la sobrevivencia de los herbívoros.
+805	La excesiva presión sobre los herbívoros sigue siendo el desequilibrio más importante ahora. Para corregirlo, es necesario aumentar la sobrevivencia de los herbívoros (menos caza).
+810	La excesiva presión sobre los herbívoros es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la sobrevivencia de los herbívoros (menos caza de depredadores).
+815	La excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe reducirse la caza de herbívoros.
+820	La excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe reducirse la caza de herbívoros.
+825	La excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe reducirse la caza de herbívoros.
+830	Excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe reducirse la caza de herbívoros.
+835	La excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe reducirse la caza de herbívoros.
+840	La excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe reducirse la caza de herbívoros. Los depredadores deben reducir su caza de herbívoros y aumentar su consumo de presas muertas.
+845	La excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la población de herbívoros mediante la reducción de la caza y aumentar la disponibilidad de presas muertas para los depredadores.
+850	La excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la población de herbívoros mediante la reducción de la caza y aumentar la disponibilidad de presas muertas para los depredadores.
+855	La excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la población de herbívoros mediante la reducción de la caza y aumentar la disponibilidad de presas muertas para los depredadores. A los depredadores se les puede pedir aumentar su consumo de pre
+860	La excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la población de herbívoros mediante la reducción de la caza y aumentar la disponibilidad de presas muertas para los depredadores.
+865	La excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la población de herbívoros mediante la reducción de la caza.
+870	Excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la población de herbívoros mediante la reducción de la caza.
+875	La excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, se debe disminuir la caza de herbívoros para aumentar su población.
+880	La excesiva muerte de herbívoros debido a caza es el desequilibrio más importante ahora. Para corregirlo, debe reducirse la caza de herbívoros.
+885	Excesivo nivel de caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, se debe reducir la caza de herbívoros para aumentar su población.
+890	Excesivo nivel de caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe reducirse la caza de herbívoros para aumentar su población.
+895	Excesivo nivel de caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe reducirse la caza de herbívoros para aumentar su población. Herbívoros: mueren_hambre más. Depredadores: mueren_hambre menos.
+900	Excesivo nivel de caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe reducirse la caza de herbívoros para aumentar su población.
+905	El desequilibrio más importante actualmente es el excesivo nivel de caza de herbívoros. Debe disminuirse la caza para aumentar la población de herbívoros.
+910	Desequilibrio más importante actualmente: excesiva caza de herbívoros. Para corregirlo, debe reducirse la caza de herbívoros para aumentar su población.
+915	Excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe disminuirse la caza de herbívoros.
+920	Excesiva caza de herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la población de herbívoros, disminuyendo la caza de herbívoros en las próximas iteraciones.
+925	El desequilibrio más importante actualmente es la sobreexplotación de los herbívoros. Para corregirlo, debe disminuirse la caza de herbívoros en las próximas iteraciones.
+930	Sobreexplotación de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe disminuirse la caza de herbívoros en las próximas iteraciones.
+935	Sobreexplotación de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe disminuirse la caza de herbívoros en las próximas iteraciones.
+940	Sobreexplotación de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, se debe disminuir la caza de herbívoros en las próximas iteraciones.
+945	Sobreexplotación de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, se debe disminuir la caza de herbívoros en las próximas iteraciones.
+950	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. Para corregirlo, se debe disminuir la caza de herbívoros en las próximas iteraciones.
+955	Sobreexplotación de los herbívoros es el desequilibrio más importante ahora. Para corregirlo, se debe reducir la caza de herbívoros en las próximas iteraciones.
+960	Los herbívoros sobreviven demasiado poco y deben aumentar sus números para asegurar su supervivencia, disminuyendo la caza en las próximas iteraciones.
+965	Desequilibrio más importante ahora: Sobreexplotación de herbívoros. Reducir caza de herbívoros en las próximas iteraciones.
+970	Sobreexplotación de herbívoros. Reducir caza de herbívoros en las próximas iteraciones.
+975	"El desequilibrio más importante ahora es la sobreexplotación de herbívoros. En las próximas iteraciones, la estrategia debe ser disminuir la caza de herbívoros."
+980	"La sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, la estrategia debería ser reducir la caza de herbívoros."
+985	La sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, la estrategia debería ser reducir la caza de herbívoros.
+990	La sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, la estrategia debería ser disminuir la caza de herbívoros.
+995	La sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, la estrategia debería ser disminuir la caza de herbívoros.
+1000	La sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, la estrategia debería ser disminuir la caza de herbívoros.
+1005	El desequilibrio más importante ahora es la sobreexplotación de los herbívoros. En las próximas iteraciones, la estrategia debería ser disminuir la caza de herbívoros.
+1010	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia para corregirlo: disminuir caza de herbívoros.
+1015	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia para corregirlo: disminuir caza de herbívoros.
+1020	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia para corregirlo: disminuir caza de herbívoros.
+1025	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia para corregirlo: disminuir caza de herbívoros.
+1030	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia para corregirlo: disminuir caza de herbívoros.
+1035	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia para corregirlo: aumentar plantas y disminuir caza de herbívoros.
+1040	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia para corregirlo: aumentar plantas y disminuir caza de herbívoros.
+1045	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia para corregirlo: aumentar plantas y disminuir caza de herbívoros.
+1050	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia para corregirlo: aumentar plantas y disminuir caza de herbívoros.
+1055	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia para corregirlo: aumentar plantas y disminuir caza de herbívoros.
+1060	Desequilibrio más importante: Sobreexplotación de herbívoros. En las próximas iteraciones, estrategia: aumentar plantas y disminuir caza de herbívoros.
+1065	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia: aumentar plantas y disminuir caza de herbívoros. (Para los depredadores, disminuir caza de herbívoros).
+1070	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia: aumentar plantas y disminuir caza de herbívoros. Para los depredadores, disminuir caza de herbívoros.
+1075	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia: aumentar plantas y disminuir caza de herbívoros (por herbívoros). Para los depredadores, disminuir caza de herbívoros (por depredadores).
+1080	"La sobrexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia: aumentar plantas y disminuir caza de herbívoros (por depredadores)."
+1085	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia: aumentar plantas y disminuir caza de herbívoros (por depredadores).
+1090	Desequilibrio más importante actual: Sobreexplotación de herbívoros. En las próximas iteraciones, estrategia: aumentar plantas y disminuir caza de herbívoros (por depredadores).
+1095	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia: aumentar plantas y reducir caza de herbívoros (por depredadores).
+1100	El desequilibrio más importante actual es la sobreexplotación de herbívoros. En las próximas iteraciones, estrategia: aumentar plantas y disminuir caza de herbívoros (por depredadores).
+1105	El desequilibrio más importante ahora es la sobreexplotación de herbívoros. En las próximas iteraciones, estrategia: aumentar plantas y disminuir caza de herbívoros (por depredadores).
+1110	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia: aumentar plantas y disminuir caza de herbívoros (por depredadores).
+1115	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia: aumentar plantas y disminuir caza de herbívoros (por depredadores).
+1120	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia: aumentar plantas y disminuir caza de herbívoros (por depredadores).
+1125	Sobreexplotación de herbívoros es el desequilibrio más importante ahora. En las próximas iteraciones, estrategia: disminuir caza de herbívoros (por depredadores).
+1130	Desequilibrio más importante ahora: Masiva muerte de herbívoros debido a sobreexplotación. Estrategia: Augmentar plantas y disminuir caza de herbívoros.
+1135	Masiva muerte de herbívoros debido a sobreexplotación por depredadores. Estrategia: Disminuir caza de herbívoros (por depredadores).
+1140	Masiva muerte de herbívoros debido a sobreexplotación por depredadores. Estrategia: Disminuir caza de herbívoros (por depredadores).
+1145	Masiva muerte de herbívoros debido a falta de comida. Estrategia: Augmentar plantas.
+1150	Desequilibrio más importante actual: Masiva muerte de herbívoros debido a falta de comida. Estrategia: Augmentar plantas.
+1155	"Masiva muerte de herbívoros debido a falta de comida. Estrategia: Augmentar plantas producción para atender la demanda de alimentos por los herbívoros."
+1160	"Masiva muerte de herbívoros debido a falta de comida. Estrategia: Augmentar producción de plantas para satisfacer la demanda de alimentos por los herbívoros."
+1165	"Masiva muerte de herbívoros debido a falta de comida. Estrategia: Augmentar producción de plantas para satisfacer la demanda de alimentos por los herbívoros."
+1170	"Los herbívoros sufren una escasez de alimento, aumente la producción de plantas para satisfacer su demanda."
+1175	Los herbívoros están sufriendo una escasez de alimento, aumente la producción de plantas para satisfacer su demanda.
+1180	"Los herbívoros sufren masiva hambre, aumente la producción de plantas para satisfacer su demanda."
+1185	Los herbívoros mueren de hambre en exceso (20%), se debe aumentar la producción de plantas para satisfacer su demanda.
+1190	Los herbívoros sufren un desequilibrio más importante, debido a la escasez de alimento. Para corregirlo, se debe aumentar la producción de plantas.
+1195	"Los herbívoros sufren un desequilibrio más importante debido a la escasez de alimento. Para corregirlo, se debe aumentar la producción de plantas."
+1200	Los herbívoros sufren un desequilibrio más importante debido a la escasez de alimento. Para corregirlo, se debe aumentar la producción de plantas.
+1205	Los herbívoros están sufriendo un desequilibrio más importante debido a la escasez de alimento. Para corregirlo, se debe aumentar la producción de plantas.
+1210	Los herbívoros sufren un desequilibrio más importante debido a la escasez de alimento. Para corregirlo, debe aumentar la producción de plantas.
+1215	Los herbívoros sufren un desequilibrio más importante debido a la escasez de alimento. Para corregirlo, se debe aumentar la producción de plantas. Los depredadores también deben cazar menos para no exacerbar la escasez de alimentos para los herbívoros.
+1220	Los herbívoros sufren un desequilibrio más importante debido a la escasez de alimento. Para corregirlo, se debe aumentar la producción de plantas. Los depredadores también deben cazar menos para no exacerbar la escasez de alimentos para los herbívoros.
+1225	Los herbívoros sufren un desequilibrio más importante debido a la escasez de alimento. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1230	El desequilibrio más importante ahora es la escasez de alimento para los herbívoros. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1235	El desequilibrio más importante ahora es la escasez de alimento para los herbívoros. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1240	Los herbívoros sufren una escasez más significativa de alimento, debido a que su consumo supera la producción de plantas. Para corregirlo, debe reducir el consumo de herbívoros y aumentar la producción de plantas.
+1245	Los herbívoros sufren una escasez más significativa de alimento. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1250	El desequilibrio más importante ahora es la escasez de alimento para los herbívoros. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1255	El desequilibrio más importante ahora es la escasez de alimento para los herbívoros. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1260	Los herbívoros experimentan escasez de alimento más significativa. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1265	La escasez de alimento para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1270	La escasez de alimento para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1275	La escasez de alimento para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1280	La escasez de alimento para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas, reduciendo el consumo de herbívoros.
+1285	"La escasez de alimento para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros."
+1290	La escasez de alimento para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1295	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la producción de plantas (comer más).
+1300	La escasez de alimentos para los herbívoros sigue siendo el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas, reducir el consumo de herbívoros y mejorar la supervivencia de los depredadores mediante una reducción de su hambre.
+1305	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1310	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, se debe aumentar la producción de plantas, reducir el consumo de herbívoros y mejorar la supervivencia de los depredadores mediante una reducción de su hambre. Los herbívoros deberían comer m
+1315	"La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentar la producción de plantas, reducir el consumo de herbívoros y mejorar la supervivencia de los depredadores mediante una reducción de su hambre."
+1320	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1325	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1330	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas y reducir el consumo de herbívoros, mejorar la supervivencia de los depredadores al reducir su hambre.
+1335	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas.
+1340	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas.
+1345	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la producción de plantas y reducir el consumo de herbívoros.
+1350	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas.
+1355	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentar la producción de plantas. Los herbívoros deben comer más.
+1360	El desequilibrio más importante actualmente es la escasez de alimentos para los herbívoros. Para corregirlo, se debe aumentar la producción de plantas. Los herbívoros deben comer más.
+1365	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, se debe aumentar la producción de plantas y los herbívoros deben comer más.
+1370	El desequilibrio más importante actualmente es la escasez de alimentos para los herbívoros. Para corregirlo, se debe aumentar la producción de plantas y los herbívoros deben comer más.
+1375	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas y aumentarse la cantidad de plantas comidas por los herbívoros.
+1380	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de plantas y aumentarse la cantidad de plantas comidas por los herbívoros.
+1385	El desequilibrio más importante actualmente es la escasez de alimentos para los herbívoros. Para corregirlo, debe aumentarse la producción de plantas y aumentarse la cantidad de plantas comidas por los herbívoros. Los herbívoros deben comer más.
+1390	El desequilibrio más importante ahora es la escasez de alimentos para los herbívoros. Para corregirlo, debe aumentarse la producción de plantas y aumentarse la cantidad de plantas comidas por los herbívoros (comer más).
+1395	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas y aumentarse la cantidad de plantas comidas por los herbívoros (comer más).
+1400	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas e incrementarse la cantidad comida por los herbívoros. Los herbívoros deben comer más.
+1405	Los herbívoros experimentan una escasez de alimentos, que debe corregirse aumentando la producción de plantas e incrementando la cantidad comida por los herbívoros (comer más).
+1410	Los herbívoros experimentan una escasez de alimentos, lo que debe corregirse incrementando la producción de plantas y aumentando la cantidad comida por los herbívoros (comer más).
+1415	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, aumentar la producción de plantas e incrementar la cantidad comida por los herbívoros (comer más) debería ser la estrategia prioritaria en las próximas iteraciones.
+1420	Los herbívoros experimentan una escasez de alimentos, lo que debe corregirse incrementando la producción de plantas e incrementando la cantidad comida por los herbívoros (comer más).
+1425	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debería incrementarse la producción de plantas y aumentarse la cantidad comida por los herbívoros (comer más).
+1430	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debería incrementarse la producción de plantas e incrementarse la cantidad comida por los herbívoros (comer más).
+1435	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debería incrementarse la producción de plantas y aumentarse la cantidad comida por los herbívoros (comer más).
+1440	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debería incrementarse la producción de plantas y aumentarse la cantidad comida por los herbívoros.
+1445	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debería incrementarse la producción de plantas y aumentarse la cantidad comida por los herbívoros.
+1450	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo, debe incrementarse la producción de plantas y aumentarse la cantidad comida por los herbívoros.
+1455	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de plantas y el consumo de alimentos por los herbívoros.
+1460	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de plantas y el consumo de alimentos por los herbívoros.
+1465	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de plantas y el consumo de alimentos por los herbívoros. Los herbívoros deben comer más.
+1470	La escasez de alimentos en los herbívoros es el desequilibrio más importante ahora. Debería aumentarse la producción de plantas para que los herbívoros coman más.
+1475	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Debería aumentarse la producción de plantas para que los herbívoros coman más.
+1480	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas y estrategias debe ser fomentar el consumo de alimentos por los herbívoros.
+1485	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe aumentarse la producción de plantas y estrategias deben ser fomentar el consumo de alimentos por los herbívoros.
+1490	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe aumentarse la producción de plantas y estrategias deben ser fomentar el consumo de alimentos por los herbívoros.
+1495	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe aumentarse la producción de plantas y fomentarse el consumo de alimentos por los herbívoros.
+1500	La escasez de alimentos es el desequilibrio más importante ahora. Debe aumentarse la producción de plantas y estrategias deben fomentarse para el consumo de alimentos por los herbívoros.
+1505	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe aumentarse la producción de plantas y estrategias deben fomentarse para el consumo de alimentos por los herbívoros.
+1510	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe aumentarse la producción de plantas y fomentarse el consumo de alimentos por los herbívoros.
+1515	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas y el consumo de alimentos por los herbívoros.
+1520	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas y estrategias deben fomentarse para el consumo de alimentos por los herbívoros, para reducir la tasa de muerte por hambre entre ellos.
+1525	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas y estrategias deben fomentarse para el consumo de alimentos por los herbívoros, para reducir la tasa de muerte por hambre entre ellos.
+1530	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Se deben fomentar estrategias para incrementar la producción de plantas y el consumo de alimentos por los herbívoros para reducir la tasa de muerte por hambre entre ellos.
+1535	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo de alimentos por los herbívoros y reducir la tasa de muerte por hambre entre ellos.
+1540	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo de alimentos por los herbívoros y reducir la tasa de muerte por hambre entre ellos.
+1545	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo de alimentos por los herbívoros y reducir la tasa de muerte por hambre entre ellos. Los herbívoros deben comer más para superar la escasez de alimen
+1550	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe aumentar la producción de plantas para superar la escasez y fomentar la supervivencia de los herbívoros.
+1555	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo de alimentos por los herbívoros y reducir la tasa de muerte por hambre entre ellos.
+1560	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo de alimentos por los herbívoros y reducir la tasa de muerte por hambre entre ellos.
+1565	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo de alimentos por los herbívoros y reducir la tasa de muerte por hambre entre ellos.
+1570	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo de alimentos por los herbívoros y reducir la tasa de muerte por hambre entre ellos.
+1575	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo de alimentos por los herbívoros.
+1580	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo de alimentos por los herbívoros.
+1585	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo de alimentos por los herbívoros y reducir la tasa de muerte por hambre entre ellos.
+1590	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo de alimentos por los herbívoros y reducir la tasa de muerte por hambre entre ellos.
+1595	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo de alimentos por los herbívoros y reducir la tasa de muerte por hambre entre ellos.
+1600	El desequilibrio más importante ahora es la escasez de alimentos para los herbívoros, lo que debe corregirse fomentando la producción de plantas para aumentar su consumo y reducir la muerte por hambre.
+1605	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar su consumo.
+1610	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar su consumo por los herbívoros.
+1615	La escasez de alimentos es el desequilibrio más importante ahora. Debe fomentarse la producción de plantas para aumentar el consumo por los herbívoros.
+1620	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe fomentarse la producción de plantas para aumentar su consumo por los herbívoros.
+1625	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas para aumentar el consumo por los herbívoros.
+1630	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas para aumentar el consumo por los herbívoros.
+1635	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas para aumentar el consumo por los herbívoros.
+1640	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas para aumentar el consumo por los herbívoros.
+1645	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo, aumente la producción de plantas para que los herbívoros puedan consumirlas.
+1650	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas para que los herbívoros puedan consumirlas.
+1655	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas para que los herbívoros puedan consumirlas.
+1660	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas para que los herbívoros puedan consumirlas.
+1665	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas para que los herbívoros puedan consumirlas.
+1670	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de plantas, lo que sugiere que debería producirse más plantas para que los herbívoros puedan comer más.
+1675	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de plantas, lo que sugiere que debería producirse más plantas para que los herbívoros puedan comer más. Los herbívoros deben comer más para sobrevivir.
+1680	Aumente la producción de plantas para corregir la escasez de alimentos para los herbívoros, lo que debería producirse más plantas para que los herbívoros puedan comer más y así sobrevivir.
+1685	Desequilibrio más importante: Escasez de alimentos para los herbívoros. Para corregirlo, debe producirse más plantas para que los herbívoros puedan comer más.
+1690	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de plantas para que los herbívoros puedan comer más. Los herbívoros deben comer más para sobrevivir.
+1695	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de plantas, lo que hará que los herbívoros puedan comer más y así sobrevivir.
+1700	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de plantas para que los herbívoros puedan comer más. Los herbívoros deben comer más para sobrevivir.
+1705	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de plantas para que los herbívoros puedan comer más y así sobrevivir. Los herbívoros deben comer más para sobrevivir.
+1710	La escasez de alimentos para los herbívoros es el desequilibrio más importante ahora. Para corregirlo, debe aumentarse la producción de plantas para que los herbívoros puedan comer más y así sobrevivir, lo que resultará en una mayor sobrevivencia de los depredadores. Los herbívoros deben comer más p
+1715	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo, debe aumentarse la producción de plantas, lo que resultará en una mayor sobrevivencia de los herbívoros y así en una mayor sobrevivencia de los depredadores. Los herbívoros deben comer más pa
+1720	El desequilibrio más importante ahora es la escasez de alimentos para los herbívoros. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas, lo que resultará en una mayor sobrevivencia de los herbívoros y así en una mayor sobrevivencia de los depredadores. Los herbívo
+1725	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas, lo que resultará en una mayor sobrevivencia de los herbívoros y así en una mayor sobrevivencia de los depredadores. Los h
+1730	La escasez de alimentos para los herbívoros es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas. Los herbívoros deben comer más.
+1735	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros coman más.
+1740	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que los herbívoros coman más.
+1745	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros coman más.
+1750	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros coman más.
+1755	La escasez de alimentos es el desequilibrio más importante ahora, para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros coman más.
+1760	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros coman más.
+1765	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros coman más.
+1770	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros coman más.
+1775	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros coman más.
+1780	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros coman más.
+1785	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros y depredadores coman más.
+1790	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros y depredadores coman más.
+1795	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros y depredadores coman más.
+1800	La escasez de alimentos sigue siendo el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros y depredadores coman más.
+1805	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros y depredadores coman más.
+1810	La escasez de alimentos sigue siendo el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros y depredadores coman más.
+1815	La escasez de alimentos sigue siendo el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros y depredadores coman más.
+1820	La escasez de alimentos sigue siendo el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros y depredadores coman más. (Herbívoros: comer más. Depredadores: comer más.)
+1825	La escasez de alimentos es el desequilibrio más importante actualmente. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles (herbívoros y depredadores) coman más.
+1830	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles (herbívoros y depredadores) coman más.
+1835	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles (herbívoros y depredadores) coman más.
+1840	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que los herbívoros y depredadores coman más.
+1845	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles (herbívoros y depredadores) coman más.
+1850	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles (herbívoros y depredadores) coman más.
+1855	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles (herbívoros y depredadores) coman más.
+1860	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles (herbívoros y depredadores) coman más.
+1865	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles (herbívoros y depredadores) coman más.
+1870	La escasez de alimentos sigue siendo el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles (herbívoros y depredadores) coman más.
+1875	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles (herbívoros y depredadores) coman más.
+1880	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles (herbívoros y depredadores) coman más.
+1885	La escasez de alimentos es el desequilibrio más importante ahora. Para corregirlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles, herbívoros y depredadores, coman más.
+1890	"La escasez de alimentos persiste como desequilibrio más grave actualmente. Para mejorarlo en las próximas iteraciones, se debe aumentar la producción de plantas para que ambos roles, herbívoros y depredadores, coman más."
+1895	La escasez de alimentos persiste como desequilibrio más grave actualmente. Para mejorarlo en las próximas iteraciones, debe aumentarse la producción de plantas para que ambos roles, herbívoros y depredadores, coman más.
+1900	La escasez de alimentos persiste como desequilibrio más grave actualmente. Para mejorarlo en las próximas iteraciones, se debe aumentar la producción de plantas para que ambos roles, herbívoros y depredadores, coman más.
+1905	La escasez de alimentos sigue siendo el desequilibrio más grave actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que los herbívoros coman más.
+1910	La escasez de alimentos es el desequilibrio más grave actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que BOTH roles, herbívoros y depredadores, coman más.
+1915	La escasez de alimentos es el desequilibrio más grave actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que BOTH roles, herbívoros y depredadores, coman más.
+1920	La escasez de alimentos es el desequilibrio más grave actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que BOTH roles, herbívoros y depredadores, coman más.
+1925	La escasez de alimentos es el desequilibrio más grave actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que ambos roles, herbívoros y depredadores, coman más.
+1930	La escasez de alimentos es el desequilibrio más grave actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que ambos roles, herbívoros y depredadores, coman más.
+1935	La escasez de alimentos es el desequilibrio más grave actualmente. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas, especialmente para el rol herbívoro.
+1940	Aumentar la producción de plantas especialmente para el rol herbívoro para corregir el desequilibrio más grave actualmente, alta mortalidad de hambre entre herbívoros.
+1945	La escasez de alimentos es el desequilibrio más grave actualmente, especialmente afectando al rol herbívoro. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que el rol herbívoro coma más.
+1950	La escasez de alimentos es el desequilibrio más grave actualmente, especialmente afectando al rol herbívoro. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que el rol herbívoro coma más.
+1955	La escasez de alimentos es el desequilibrio más grave actualmente, especialmente afectando al rol herbívoro. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que el rol herbívoro coma más.
+1960	Aumentar la producción de plantas para aliviar la escasez de alimentos que afecta al rol herbívoro y permitir que sobrevivan y crezcan.
+1965	La escasez de alimentos sigue siendo el desequilibrio más grave actualmente, especialmente afectando al rol herbívoro. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que el rol herbívoro coma más.
+1970	La escasez de alimentos sigue siendo el desequilibrio más grave actualmente, especialmente afectando al rol herbívoro. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que el rol herbívoro coma más.
+1975	"La escasez de alimentos sigue siendo el desequilibrio más grave actualmente, especialmente afectando al rol herbívoro. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que el rol herbívoro coma más."
+1980	La escasez de alimentos sigue siendo el desequilibrio más grave en el rol herbívoro. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que el rol herbívoro coma más.
+1985	La escasez de alimentos sigue siendo el desequilibrio más grave en el rol herbívoro. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que el rol herbívoro coma más.
+1990	La escasez de alimentos sigue siendo el desequilibrio más grave actualmente en el rol herbívoro. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que el rol herbívoro coma más.
+1995	La escasez de alimentos sigue siendo el desequilibrio más grave en el rol herbívoro. Para corregirlo en las próximas iteraciones, se debe aumentar la producción de plantas para que el rol herbívoro coma más.

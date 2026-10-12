@@ -1,43 +1,34 @@
 """
-Módulo principal para el entrenamiento del modelo RL.
+Configuración de PPO y helpers reutilizables de entrenamiento.
+
+Este módulo NO ejecuta el loop de entrenamiento (eso vive en
+`orchestrator.py`). Solo expone:
+  - build_config: la configuración PPO lista para usar.
+  - helpers de política/estado LSTM.
+  - get_monitor_header / build_monitor_row: filas del monitor.csv.
+  - run_policy_episode: correr un episodio con las políticas entrenadas.
 """
 import os
 os.environ.pop("AIR_VERBOSITY", None)
 
-import csv
-from pathlib import Path
-
-import numpy as np
-import ray
-
 from ..environment.multi_agent_ecosystem import MultiAgentEcosystem
 from .callbacks import PerAgentAndReasonMetrics
-
-from ecosystem_simulator.config import DEFAULT_ENV_CFG, DEFAULT_NUM_RUNNERS, DEFAULT_NUM_ITERS
-
-NUM_ITERS       = DEFAULT_NUM_ITERS         
-VIS_START_FRAC  = 0.7         # empezar al 50% del entrenamiento
-VIS_INTERVAL    = 10  
-
-try:
-    from ..utils.pygame_visualizer import EcosystemVisualizer
-    HAS_PYGAME = True
-except ImportError:
-    HAS_PYGAME = False
-    print("Pygame no disponible - visualización desactivada")
 
 
 def build_config(
     env_cfg: dict,
     num_runners: int = 4,
     callbacks_class=None,
-    use_lstm: bool = True,
+    use_lstm: bool = False,
+    num_gpus: int = 0,
+    seed: int | None = None,
 ):
     """
     Construye y retorna la configuración PPO lista para usar.
 
-    use_lstm=True activa una política recurrente con LSTM.
-    No cambia el entorno ni las observaciones.
+    use_lstm=False por defecto: la observación YA incluye features de memoria
+    (índices 16-33), así que una MLP es suficiente y aprende más rápido/estable
+    que una política recurrente. Puedes activar la LSTM para experimentar.
     """
     from ray.tune.registry import register_env
     from ray.rllib.algorithms.ppo import PPOConfig
@@ -49,23 +40,17 @@ def build_config(
 
     frag = env_cfg["max_steps"]
 
-    # Con LSTM conviene usar un batch más grande para que aprenda secuencias.
-    # Si lo sientes muy lento, puedes bajar 2048 a 1024.
+    # Batch total = num_runners * frag (p.ej. 4 * 350 = 1400).
+    total_batch = num_runners * frag
+
     if use_lstm:
-        # Con tu configuración actual:
-        # num_runners=4 y max_steps=350
-        # total_batch = 4 * 350 = 1400
-        total_batch = num_runners * frag
-
-        # Mejor que el minibatch sea compatible con el tamaño del episodio.
-        # 350 funciona bien porque coincide con max_steps.
+        # Con LSTM el minibatch debe respetar secuencias completas.
         minibatch = frag
-
-        num_epochs = 2
+        num_epochs = 8
     else:
-        total_batch = num_runners * frag
-        minibatch = 200
-        num_epochs = 2
+        # MLP: minibatch más pequeño => más pasos de SGD por iteración.
+        minibatch = 256
+        num_epochs = 10
 
     register_env(
         "multi_eco",
@@ -90,22 +75,24 @@ def build_config(
         )
     )
 
-    config = config.api_stack(
+    # Old API stack
+    config.api_stack(
         enable_rl_module_and_learner=False,
-        enable_env_runner_and_connector_v2=False
+        enable_env_runner_and_connector_v2=False,
     )
 
-    config = config.resources(num_gpus=1)
+    # Forzar uso de CPU
+    config.resources(
+        num_gpus=num_gpus,
+    )
 
-    try:
-        config = config.rollouts(batch_mode="truncate_episodes")
-    except Exception:
-        pass
-
-    config = config.env_runners(
+    # Configuración de los runners.
+    # batch_mode se configura aquí, sin usar rollouts().
+    config.env_runners(
         num_env_runners=num_runners,
         rollout_fragment_length=frag,
-        sample_timeout_s=300
+        sample_timeout_s=300,
+        batch_mode="truncate_episodes",
     )
 
     # Configuración del modelo.
@@ -123,34 +110,41 @@ def build_config(
         "vf_share_layers": False,
     }
 
+    # NOTA: estás en el old API stack (enable_rl_module_and_learner=False),
+    # cuyos nombres canónicos son num_sgd_iter / sgd_minibatch_size.
+    # vf_clip_param=10 era el gran problema: con retornos de episodio de decenas
+    # (o cientos), la función de valor quedaba recortada y no podía ajustar la
+    # línea base => las ventajas (GAE) salían basura => la política no aprendía.
+    train_kwargs = dict(
+        train_batch_size=total_batch,
+        lr=3e-4,
+        gamma=0.99,
+        lambda_=0.95,
+        clip_param=0.2,
+        vf_clip_param=50.0,   # acorde a la escala de recompensa (antes 10)
+        grad_clip=1.0,        # menos agresivo que 0.5
+        entropy_coeff=0.01,
+        model=model_cfg,
+    )
+
     try:
-        config = config.training(
-            train_batch_size=total_batch,
-            minibatch_size=minibatch,
-            num_epochs=num_epochs,
-            lr=3e-4,
-            gamma=0.99,
-            lambda_=0.95,
-            clip_param=0.2,
-            vf_clip_param=10.0,
-            grad_clip=0.5,
-            entropy_coeff=0.01,
-            model=model_cfg,
+        config.training(
+            num_sgd_iter=num_epochs,
+            sgd_minibatch_size=minibatch,
+            **train_kwargs,
         )
     except TypeError:
-        config = config.training(
-            train_batch_size=total_batch,
-            sgd_minibatch_size=minibatch,
-            num_sgd_iter=num_epochs,
-            lr=3e-4,
-            gamma=0.99,
-            lambda_=0.95,
-            clip_param=0.2,
-            vf_clip_param=10.0,
-            grad_clip=0.5,
-            entropy_coeff=0.01,
-            model=model_cfg,
+        config.training(
+            num_epochs=num_epochs,
+            minibatch_size=minibatch,
+            **train_kwargs,
         )
+
+    # Fuera del except: debe aplicarse SIEMPRE, no solo cuando falla la
+    # primera llamada. Con el old API stack la primera SÍ funciona, así que
+    # antes el seed nunca se aplicaba y las corridas no eran reproducibles.
+    if seed is not None:
+        config.debugging(seed=seed)
 
     return config
 def get_policy_id_for_agent(agent_id: str, env_cfg: dict) -> str:
@@ -247,6 +241,9 @@ def get_monitor_header(n_agents: int):
             "predator_avg_food", "predator_avg_water",
 
             "herbivore_critical_ratio", "predator_critical_ratio",
+
+            "herbivore_avg_nn_dist", "predator_avg_nn_dist",
+            "herbivore_avg_pred_dist",
         ]
         + [f"r_agent_{i}" for i in range(n_agents)]
         + [f"l_agent_{i}" for i in range(n_agents)]
@@ -304,6 +301,10 @@ def build_monitor_row(result: dict, iteration: int, n_agents: int):
 
         m("herbivore_critical_ratio"),
         m("predator_critical_ratio"),
+
+        m("herbivore_avg_nn_dist"),
+        m("predator_avg_nn_dist"),
+        m("herbivore_avg_pred_dist"),
     ]
 
     row.extend(m(f"agent_{a}/episode_return") for a in range(n_agents))
@@ -362,81 +363,3 @@ def run_policy_episode(trainer, env_cfg: dict, step_callback=None):
 
         if all(terminations.values()) or all(truncations.values()):
             break
-
-def main(enable_visualization: bool = False):
-    ray.init(ignore_reinit_error=True)
-
-    # --- Configuración del entorno ---
-    ENV_CFG = DEFAULT_ENV_CFG.copy()
-    n_agents = ENV_CFG["n_predators"] + ENV_CFG["n_herbivores"]
-
-    # Parámetros de entrenamiento
-    NUM_RUNNERS  = DEFAULT_NUM_RUNNERS
-    FRAG = ENV_CFG["max_steps"]
-    TOTAL_BATCH = NUM_RUNNERS * FRAG
-
-    config = build_config(
-        env_cfg=ENV_CFG,
-        num_runners=NUM_RUNNERS,
-        callbacks_class=PerAgentAndReasonMetrics,
-    )
-
-    trainer = config.build()
-    start_vis_iter = int(NUM_ITERS * VIS_START_FRAC)
-
-    visualizer = None
-    if enable_visualization and HAS_PYGAME:
-        visualizer = EcosystemVisualizer(
-            map_width=ENV_CFG["map_width"],
-            map_height=ENV_CFG["map_height"]
-        )
-        print("Visualización en tiempo real activada")
-
-    output_csv = Path(__file__).resolve().parents[2] / "monitor.csv"
-    print("Guardando monitor en:", output_csv)
-
-    try:
-        with open(output_csv, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(get_monitor_header(n_agents))
-
-            for i in range(NUM_ITERS):
-                result = trainer.train()
-                row, r_mean, l_mean = build_monitor_row(result, i, n_agents)
-
-                writer.writerow(row)
-                f.flush()
-
-                print(f"Iter {i}: ep_return_mean={r_mean}, ep_len_mean={l_mean}")
-
-                if visualizer and i >= start_vis_iter and (i - start_vis_iter) % VIS_INTERVAL == 0:
-                    try:
-                        print(f"Mostrando visualización de la iteración {i}")
-
-                        def render_step(env, step, rewards, terminations, truncations, infos):
-                            alive_count = len(env.agents)
-                            metrics = {
-                                "mean_reward": np.mean(list(rewards.values())) if rewards else 0,
-                                "total_reward": sum(rewards.values()) if rewards else 0,
-                                "alive_agents": alive_count,
-                                "total_agents": n_agents,
-                                "iteration": i,
-                            }
-
-                            return visualizer.render(
-                                env, env.species, step, i, rewards, metrics
-                            )
-
-                        run_policy_episode(trainer, ENV_CFG, step_callback=render_step)
-                        print("Visualización completada")
-
-                    except Exception as e:
-                        print(f"Error en visualización: {e}")
-    finally:
-        if visualizer:
-            visualizer.close()
-        ray.shutdown()
-
-
-if __name__ == "__main__":
-    main()
